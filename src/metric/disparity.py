@@ -21,7 +21,6 @@ from __future__ import annotations
 
 import numpy as np
 import pandas as pd
-from sklearn.feature_selection import mutual_info_classif
 
 PRIMARY = "max"  # locked primary aggregation
 
@@ -47,6 +46,8 @@ def compute_mi_weights(df, y, columns=None, seed=0) -> pd.Series:
     no imputation and no model fit — preserving the ingestion-time differentiation. Features with
     too few observed rows or a single-class observed target get weight 0.
     """
+    from sklearn.feature_selection import mutual_info_classif  # lazy: only mi_weighted needs sklearn
+
     y = np.asarray(y)
     columns = list(df.columns) if columns is None else list(columns)
     weights = {}

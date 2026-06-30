@@ -1,0 +1,12 @@
+# Optional dependency for the Great Expectations gate integration
+# (src/pipeline/integrations.great_expectations_gate, experiment/demo_gate.py GE path).
+#
+# Install in a SEPARATE virtualenv — Great Expectations 0.18.x pins older numpy/pandas
+# (numpy 1.26, pandas 2.3) that conflict with the benchmark's numpy 2.x / pandas 3.x:
+#
+#   python3 -m venv .venv-gate
+#   .venv-gate/bin/python -m pip install -r requirements-gate.txt
+#   .venv-gate/bin/python experiment/demo_gate.py     # runs the GE-backed gate path
+#
+# The gate CORE (src/pipeline/gate.py) has no such dependency and runs in the main venv.
+great-expectations==0.18.22

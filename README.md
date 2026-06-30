@@ -42,6 +42,22 @@ Model-free and cheap to compute at a pipeline validation gate. `mean` and `weigh
 aggregations are implemented as secondary variants for comparison; the benchmark finds they
 predict comparably, so the simplest (`max`) is the locked primary.
 
+## The gate (pipeline placement)
+
+`src/pipeline/gate.py` puts the statistic to work as a **pre-training validation gate**: it
+computes the group-wise disparity on an incoming batch and **fails the pipeline** when it exceeds
+a threshold. It needs only the features and the protected-group label — **no target, no model** —
+so it runs at a true ingestion gate. `src/pipeline/integrations.py` plugs it into real
+data-quality frameworks: a **runnable Great Expectations** adapter (routes per-group null
+measurement through GE's engine, then composes the disparity + threshold), plus Deequ (PyDeequ)
+and TFDV adapters following the same pattern. This is the "fairness leg" those
+completeness-only frameworks lack — and what answers the *"just Deequ with a fairness label"*
+critique.
+
+```bash
+python experiment/demo_gate.py    # clean batch PASS / disparate batch FAIL, on Adult + COMPAS
+```
+
 ## What the benchmark does
 
 For each grid cell — `mechanism × group-correlation × overall-rate × seed` — it injects
@@ -98,6 +114,8 @@ src/
   metric/disparity.py      # the missingness-disparity statistic (D_max; +mean/weighted/mi)
   fairness/metrics.py      # equalized-odds + demographic-parity gaps
   pipeline/run_cell.py     # one grid cell, end to end
+  pipeline/gate.py         # the validation-stage gate (no target/model)
+  pipeline/integrations.py # Great Expectations (runnable) + Deequ/TFDV adapters
 
 experiment/
   benchmark/load_adult.py  # Adult loader (public, cached)
@@ -106,7 +124,10 @@ experiment/
   sweep.py                 # run the full grid
   analyze.py               # scatter, detector AUROC, regime + aggregation comparison
   run_all.py               # one command → regenerates all figures/tables (--dataset switch)
+  diagnose_compas.py       # COMPAS-reversal diagnostic
+  demo_gate.py             # validation-gate demonstration
   claims/                  # (reserved) single real-world demonstration slice
+requirements-gate.txt      # optional GE dependency (separate venv; see file header)
 
 notes/
   sources.md               # citations + verification status
@@ -143,5 +164,5 @@ Tracked as GitHub issues:
    (`notes/sources.md`); `paper/related-work.md` drafted.
 5. Optional: a third dataset to map where the signal holds vs. fails; paper integration.
 
-Planned beyond that: implement the check as a validation-stage gate inside an existing
-data-quality framework (Deequ / TFDV / Great Expectations).
+Done since: the validation-stage gate is implemented (`src/pipeline/gate.py`) with a runnable
+Great Expectations integration; Deequ/TFDV adapters are interface code pending Spark/TF infra.
