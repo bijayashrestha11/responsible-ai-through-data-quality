@@ -137,7 +137,10 @@ results/
   figures/<dataset>/       # committed outputs, per dataset
   tables/<dataset>/
   cache/                   # cached intermediates (gitignored)
-paper/                     # (planned) outline, related-work, main.tex
+paper/
+  main.tex                 # full draft (ACM acmart, numeric) — source-only
+  references.bib           # 16 verified BibTeX entries
+  related-work.md          # related-work draft
 ```
 
 ## Data handling

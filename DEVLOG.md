@@ -49,6 +49,9 @@ fairness metric.
   isolated venv); Deequ/TFDV adapters as interface code. `experiment/demo_gate.py` shows PASS on
   clean / FAIL on disparate batches, Adult + COMPAS. **All three contribution legs now exist:
   validated metric, predictive validity (Adult), pipeline placement.**
+- **Paper assembled:** `paper/main.tex` (acmart numeric) + `paper/references.bib` (16 verified).
+  Source-only (no local LaTeX); compiles on arXiv/Overleaf. Author to revise into voice + fill
+  placeholders.
 
 ---
 
@@ -138,6 +141,34 @@ Key takeaways for the paper:
 
 *Convention: add a detailed entry here after every feature — what was built, how, why, the
 result, threats to validity, and follow-ups.*
+
+### 2026-07-01 — Paper assembly (acmart draft)  (branch `feat/paper-assembly`)
+
+**What was built**
+- `paper/main.tex` — full draft in ACM `acmart` (sigconf, nonacm, numeric citations). Sections:
+  introduction (3-leg contribution), related work, the $D_{\max}$ statistic, the
+  predictive-validity benchmark (methods), results (Adult holds / COMPAS reverses), the
+  validation gate, discussion + limitations, conclusion, reproducibility, AI-use disclosure,
+  references.
+- `paper/references.bib` — 16 BibTeX entries, all VERIFIED (DOIs/identifiers); preprints noted.
+
+**How / why.** Assembled "draft from direction" from `research-brief` (argument), `experiment-plan`
+(method), `results/tables/<dataset>/` (**exact numbers quoted verbatim**), and the verified
+`sources.md`/`related-work.md`. The author owns the argument, interpretation, and final voice
+(flagged in a header comment). Numbers used: Adult $r=0.40$ pooled / MNAR $0.52$ / detector AUROC
+$0.74$–$0.78$ / EO $0.40$ vs DP $0.30$ / aggregations max $0.398$, mi $0.418$; COMPAS $r=-0.31$ +
+diagnosis variants. Impossibility results cited via `caton2024` (avoids an unverified Chouldechova
+cite); `feng2023` framed correctly (impute-then-classify is harmful).
+
+**Verified.** All 16 `\cite` keys resolve to bib entries; braces balanced. **No local LaTeX
+toolchain** (pdflatex/acmart absent) → the paper is **source-only**; compiles on arXiv/Overleaf
+(`pdflatex; bibtex; pdflatex x2`).
+
+**Honesty.** The draft states the scoped claim (Adult holds, COMPAS does not → dataset-dependent),
+labels all preprints, and includes the AI-use disclosure per the project compliance note.
+
+**Follow-up.** Author revises into voice; fill author/affiliation/email placeholders; optionally
+add figures from `results/figures/<dataset>/`; arrange the arXiv endorsement early; compile + submit.
 
 ### 2026-07-01 — Validation-stage gate (pipeline placement)  (branch `feat/validation-gate`)
 
