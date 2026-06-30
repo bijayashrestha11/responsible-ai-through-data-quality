@@ -126,7 +126,7 @@ experiment/
   run_all.py               # one command → regenerates all figures/tables (--dataset switch)
   diagnose_compas.py       # COMPAS-reversal diagnostic
   demo_gate.py             # validation-gate demonstration
-  make_figures.py          # build paper figures → results/figures/paper/
+  make_figures.py          # build paper figures → paper/figures/
   claims/                  # (reserved) single real-world demonstration slice
 requirements-gate.txt      # optional GE dependency (separate venv; see file header)
 
