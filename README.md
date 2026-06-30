@@ -19,12 +19,15 @@ holds and where it fails.
 ```bash
 python3 -m venv .venv
 .venv/bin/pip install -r requirements.txt
-.venv/bin/python experiment/run_all.py      # ~80s; regenerates all tables + figures
+.venv/bin/python experiment/run_all.py                  # Adult (default)
+.venv/bin/python experiment/run_all.py --dataset compas # COMPAS confirmatory arm
+.venv/bin/python experiment/run_all.py --dataset all    # both
 ```
 
-The first run fetches **Adult** (Census Income) via `scikit-learn`'s OpenML loader and caches
-it under `results/cache/` (gitignored); later runs are offline. Seeds are fixed, so a clone
-reproduces every figure and table.
+The first run fetches **Adult** (Census Income, via OpenML) and **COMPAS** (ProPublica
+two-year recidivism, via URL) and caches them under `results/cache/` (gitignored); later runs
+are offline. Seeds are fixed, so a clone reproduces every figure and table. Outputs are written
+per dataset under `results/{tables,figures}/<dataset>/`.
 
 ## The check (the proposed artifact)
 
@@ -49,7 +52,9 @@ gap (secondary) on a held-out test set. The primary target is the *baseline-corr
 (Δ above the matching no-disparity cell), which isolates the group-correlated-missingness effect
 from the dataset's inherent unfairness.
 
-## Results so far (Adult, 450 cells)
+## Results so far
+
+**Adult (primary, 450 cells)**
 
 - `D_max` predicts the baseline-corrected EO gap with Pearson **r ≈ 0.40** pooled, rising to
   **r ≈ 0.52 under MNAR** — the regime that is both most harmful and most predictable.
@@ -62,7 +67,18 @@ from the dataset's inherent unfairness.
   on feature importance. `D_max` remains the recommended default: it needs no labels, so it can
   run at a true pre-label ingestion gate, whereas MI-weighting requires labels at the gate.
 
-Figures: `results/figures/`. Tables: `results/tables/`.
+**COMPAS (confirmatory, 450 cells) — does *not* replicate.**
+
+- The relationship **reverses** on COMPAS: `r(D_max, eo_gap_delta) ≈ −0.31` pooled (−0.53 under
+  MNAR). Group-correlated missingness does not predict EO degradation here; if anything it
+  slightly reduces the measured gap. The signal is **dataset-dependent**, not universal — an
+  honest "where it fails" result that mirrors the unsettled state of the literature.
+- This may be partly a structural artifact (COMPAS's injection features are heavily
+  zero-inflated counts, and MNAR masking + median imputation interact with that), so the
+  reversal is flagged for diagnosis before drawing strong conclusions. See `DEVLOG.md`.
+
+Figures: `results/figures/<dataset>/`. Tables: `results/tables/<dataset>/`. Full history and
+rationale: [`DEVLOG.md`](DEVLOG.md).
 
 ---
 
@@ -70,21 +86,23 @@ Figures: `results/figures/`. Tables: `results/tables/`.
 
 ```
 experiment-plan.md         # benchmark design + rationale
+DEVLOG.md                  # running record of what/how/why (newest first)
 requirements.txt
 README.md                  # this file
 
 src/
   missingness/inject.py    # MCAR/MAR/MNAR injection with a group-correlation knob
-  metric/disparity.py      # the missingness-disparity statistic (D_max; +mean/weighted)
+  metric/disparity.py      # the missingness-disparity statistic (D_max; +mean/weighted/mi)
   fairness/metrics.py      # equalized-odds + demographic-parity gaps
   pipeline/run_cell.py     # one grid cell, end to end
 
 experiment/
   benchmark/load_adult.py  # Adult loader (public, cached)
+  benchmark/load_compas.py # COMPAS loader (ProPublica, public, cached)
   configs/grid.py          # grid + seed definitions
   sweep.py                 # run the full grid
   analyze.py               # scatter, detector AUROC, regime + aggregation comparison
-  run_all.py               # one command → regenerates all figures/tables
+  run_all.py               # one command → regenerates all figures/tables (--dataset switch)
   claims/                  # (reserved) single real-world demonstration slice
 
 notes/
@@ -92,15 +110,15 @@ notes/
   lit-review-notes.md      # organized related-work notes
 
 results/
-  figures/  tables/        # committed outputs
+  figures/<dataset>/       # committed outputs, per dataset
+  tables/<dataset>/
   cache/                   # cached intermediates (gitignored)
 paper/                     # (planned) outline, related-work, main.tex
 ```
 
 ## Data handling
 
-- **Benchmark:** Adult (and, planned, COMPAS) — public datasets, fully reproducible, no
-  special access.
+- **Benchmark:** Adult and COMPAS — public datasets, fully reproducible, no special access.
 - **Claims/EHR:** raw data is **never** committed — only derived, aggregate, non-identifiable
   outputs. No PHI or identifiers in code, commits, or prose.
 
@@ -115,8 +133,11 @@ Tracked as GitHub issues:
 
 1. ~~Importance-aware (MI-weighted) statistic~~ — **done**: implemented and validated (best
    aggregation, r ≈ 0.42; see Results). `D_max` stays the labels-free default.
-2. **COMPAS confirmatory arm** — robustness that the signal isn't an Adult artifact.
-3. **Literature** — verify citations and draft the related-work section.
+2. ~~COMPAS confirmatory arm~~ — **done**: built and run. Signal does *not* replicate (reverses;
+   see Results) — flagged for diagnosis.
+3. **Diagnose the COMPAS reversal** — is it a true counterexample or a zero-inflation/imputation
+   artifact? Gates how strongly generalization can be claimed.
+4. **Literature** — verify citations and draft the related-work section.
 
 Planned beyond that: implement the check as a validation-stage gate inside an existing
 data-quality framework (Deequ / TFDV / Great Expectations).
