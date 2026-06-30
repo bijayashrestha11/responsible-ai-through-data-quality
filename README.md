@@ -126,6 +126,7 @@ experiment/
   run_all.py               # one command → regenerates all figures/tables (--dataset switch)
   diagnose_compas.py       # COMPAS-reversal diagnostic
   demo_gate.py             # validation-gate demonstration
+  make_figures.py          # build paper figures → results/figures/paper/
   claims/                  # (reserved) single real-world demonstration slice
 requirements-gate.txt      # optional GE dependency (separate venv; see file header)
 
@@ -137,7 +138,10 @@ results/
   figures/<dataset>/       # committed outputs, per dataset
   tables/<dataset>/
   cache/                   # cached intermediates (gitignored)
-paper/                     # (planned) outline, related-work, main.tex
+paper/
+  main.tex                 # full draft (ACM acmart, numeric) — source-only
+  references.bib           # 16 verified BibTeX entries
+  related-work.md          # related-work draft
 ```
 
 ## Data handling
