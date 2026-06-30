@@ -139,8 +139,9 @@ Tracked as GitHub issues:
 2. ~~COMPAS confirmatory arm~~ — **done**: signal does *not* replicate (reverses; see Results).
 3. ~~Diagnose the COMPAS reversal~~ — **done**: not an artifact; weak/null negative → the signal
    is dataset/regime-dependent (claim scoped, not universal).
-4. **Literature** — verify citations and draft the related-work section.
-5. Optional: a third dataset to map where the signal holds vs. fails.
+4. ~~Literature~~ — **done**: all 16 §6–§8 citations verified against primary sources
+   (`notes/sources.md`); `paper/related-work.md` drafted.
+5. Optional: a third dataset to map where the signal holds vs. fails; paper integration.
 
 Planned beyond that: implement the check as a validation-stage gate inside an existing
 data-quality framework (Deequ / TFDV / Great Expectations).
