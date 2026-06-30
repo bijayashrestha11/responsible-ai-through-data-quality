@@ -2,7 +2,7 @@
 
     equalized_odds_gap = max( |TPR_1 - TPR_0|, |FPR_1 - FPR_0| )   over the binary protected group
 
-Per research-brief.md §4: report equalized-odds degradation *specifically*, not "fairness" in
+Design choice: report equalized-odds degradation *specifically*, not "fairness" in
 the abstract. Chouldechova's impossibility theorem means that with differing group base rates,
 equalized odds / predictive parity / calibration cannot jointly hold — naming the chosen axis
 pre-empts the incompatibility critique.

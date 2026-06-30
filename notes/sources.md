@@ -1,6 +1,6 @@
 # Verified Sources
 
-**The verify-every-citation rule (CLAUDE.md) governs this file.** A row may move to
+**The verify-every-citation rule governs this file.** A row may move to
 `VERIFIED` only after the actual source has been fetched and read: authors, title, venue,
 year, and DOI/identifier confirmed against the source, *and* the source confirmed to say
 what we attribute to it. Until then it stays `UNVERIFIED` and must not appear in drafted

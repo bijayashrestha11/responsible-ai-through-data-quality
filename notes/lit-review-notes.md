@@ -1,6 +1,6 @@
 # Literature Review Notes
 
-Organized per `research-brief.md` §9 — the four-part walk that delivers the reader to the
+Organized as a four-part walk that delivers the reader to the
 contribution. **Only enter a work here after it is `VERIFIED` in `sources.md`.** For each
 work, record three things: *what it did*, *what it did NOT do*, and *how our contribution
 relates* (build-on / adjacent / differentiate-from).

@@ -1,8 +1,8 @@
 # Benchmark Experiment Plan
 
-The controlled validation that earns the paper's central claim. Read `research-brief.md` §3–§5
-first; this operationalizes the benchmark arm. The claims-data slice is separate and minimal
-(one figure/table) — not covered here.
+The controlled validation that earns the paper's central claim. This operationalizes the
+benchmark arm — the contribution, the locked fairness metric, and the empirical design. The
+claims-data slice is separate and minimal (one figure/table) — not covered here.
 
 ---
 
@@ -96,7 +96,7 @@ proposes; pin its definition down first and justify it.
 
 ---
 
-## Reproducibility (non-negotiable, per CLAUDE.md)
+## Reproducibility (non-negotiable)
 
 - Fixed seed list; every cell reproducible.
 - One command regenerates all figures/tables from cached intermediate outputs.
