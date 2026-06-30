@@ -1,0 +1,5 @@
+variant,inject,impute,pearson_r
+"baseline (full, median)","age,priors_count,juv_fel_count,juv_misd_count,juv_other_count",median,-0.31067463535099465
+least-zero-inflated only (age),age,median,-0.42024057556561645
+"two least zero-inflated (age,priors_count)","age,priors_count",median,-0.5390686653950567
+"full, mean impute","age,priors_count,juv_fel_count,juv_misd_count,juv_other_count",mean,-0.22118991797915494
