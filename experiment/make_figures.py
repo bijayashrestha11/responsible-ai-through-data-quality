@@ -1,7 +1,7 @@
 """Generate publication figures for the paper from the saved grid results.
 
 Reads results/tables/<dataset>/grid.csv (no re-running the benchmark) and writes polished
-figures to results/figures/paper/ as both PDF (for LaTeX) and PNG (for preview/GitHub):
+figures to paper/figures/ (self-contained with the paper) as both PDF (for LaTeX) and PNG:
 
   fig0_gate_schematic   the validation gate's place in the pipeline (conceptual)
   fig1_scatter_contrast Adult vs COMPAS: D_max vs Delta-EO (the headline + the honest twist)
@@ -25,7 +25,7 @@ import matplotlib.pyplot as plt  # noqa: E402
 from matplotlib.patches import FancyBboxPatch, FancyArrowPatch  # noqa: E402
 from sklearn.metrics import roc_auc_score, roc_curve  # noqa: E402
 
-OUT = os.path.join(_REPO, "results", "figures", "paper")
+OUT = os.path.join(_REPO, "paper", "figures")
 os.makedirs(OUT, exist_ok=True)
 
 plt.rcParams.update({
