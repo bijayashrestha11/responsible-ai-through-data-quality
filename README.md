@@ -55,8 +55,12 @@ from the dataset's inherent unfairness.
   **r ≈ 0.52 under MNAR** — the regime that is both most harmful and most predictable.
 - Early-warning detector: **AUROC ≈ 0.74–0.78** for flagging EO-gap exceedance.
 - The statistic predicts EO degradation more cleanly than demographic parity, as expected.
-- Honest ceiling: because the statistic is model-free it is blind to feature importance, which
-  caps its predictive power — motivating an importance-aware variant (see Roadmap).
+- Ceiling and how to lift it: because `D_max` is model-free it is blind to feature importance,
+  which caps its predictive power. A model-free **MI-weighted** variant (weight each feature's
+  disparity by its mutual information with the target) is the best-predicting aggregation
+  (**r ≈ 0.42** vs 0.40 for `D_max`) — a modest, consistent lift that confirms the harm depends
+  on feature importance. `D_max` remains the recommended default: it needs no labels, so it can
+  run at a true pre-label ingestion gate, whereas MI-weighting requires labels at the gate.
 
 Figures: `results/figures/`. Tables: `results/tables/`.
 
@@ -109,8 +113,8 @@ clone and rerun the benchmark arm with no special access.
 
 Tracked as GitHub issues:
 
-1. **Importance-aware (MI-weighted) statistic** — weight per-feature disparity by mutual
-   information with the target (still model-free) to lift the predictive ceiling.
+1. ~~Importance-aware (MI-weighted) statistic~~ — **done**: implemented and validated (best
+   aggregation, r ≈ 0.42; see Results). `D_max` stays the labels-free default.
 2. **COMPAS confirmatory arm** — robustness that the signal isn't an Adult artifact.
 3. **Literature** — verify citations and draft the related-work section.
 

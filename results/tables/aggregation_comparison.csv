@@ -2,3 +2,4 @@ statistic,target,pearson_r,spearman_r
 statistic_max,eo_gap_delta,0.39782701284523614,0.45616552264515425
 statistic_mean,eo_gap_delta,0.3883688471063282,0.44889036140805366
 statistic_weighted,eo_gap_delta,0.4011055412090391,0.462352295799588
+statistic_mi,eo_gap_delta,0.4175756496254133,0.47192351276974115

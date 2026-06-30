@@ -8,16 +8,20 @@ the two protected groups, computed PRE-TRAINING on the injected data (the upstre
 
 It is cheap, model-free, and computable at a pipeline validation gate.
 
-'mean' and 'weighted' are SECONDARY aggregations, kept so the benchmark can report which
-aggregation best predicts the post-training equalized-odds gap (an empirical result, not an
-assumption). 'weighted' uses a MODEL-FREE weight (per-feature overall missingness prevalence)
-so the statistic stays genuinely pre-model — preserving the ingestion-time differentiation
-against model-dependent risk scores.
+'mean', 'weighted', and 'mi_weighted' are SECONDARY aggregations, kept so the benchmark can
+report which aggregation best predicts the post-training equalized-odds gap (an empirical
+result, not an assumption). All three stay MODEL-FREE so the statistic remains genuinely
+pre-model — preserving the ingestion-time differentiation against model-dependent risk scores:
+  - 'weighted'    weights each feature's disparity by its overall missingness prevalence.
+  - 'mi_weighted' weights by the feature's mutual information with the target (an importance
+    proxy computed without fitting a model), to test whether up-weighting disparities on
+    target-relevant features beats the importance-blind max/mean. See compute_mi_weights().
 """
 from __future__ import annotations
 
 import numpy as np
 import pandas as pd
+from sklearn.feature_selection import mutual_info_classif
 
 PRIMARY = "max"  # locked primary aggregation
 
@@ -36,8 +40,33 @@ def per_feature_disparity(df, group, columns=None) -> pd.Series:
     return pd.Series(gaps, dtype=float)
 
 
-def missingness_disparity(df, group, columns=None, aggregation=PRIMARY) -> float:
-    """Aggregate the per-feature disparities into the scalar statistic."""
+def compute_mi_weights(df, y, columns=None, seed=0) -> pd.Series:
+    """Per-feature mutual information with the target — a MODEL-FREE, PRE-training importance proxy.
+
+    Computed on the OBSERVED (non-missing) rows of each feature in the injected data, so it needs
+    no imputation and no model fit — preserving the ingestion-time differentiation. Features with
+    too few observed rows or a single-class observed target get weight 0.
+    """
+    y = np.asarray(y)
+    columns = list(df.columns) if columns is None else list(columns)
+    weights = {}
+    for col in columns:
+        obs = df[col].notna().to_numpy()
+        if obs.sum() < 10 or len(np.unique(y[obs])) < 2:
+            weights[col] = 0.0
+            continue
+        xcol = df.loc[obs, [col]].to_numpy(dtype=float)
+        mi = mutual_info_classif(xcol, y[obs], discrete_features=False, random_state=seed)
+        weights[col] = float(max(mi[0], 0.0))
+    return pd.Series(weights, dtype=float)
+
+
+def missingness_disparity(df, group, columns=None, aggregation=PRIMARY, weights=None) -> float:
+    """Aggregate the per-feature disparities into the scalar statistic.
+
+    'mi_weighted' requires precomputed per-feature `weights` (see compute_mi_weights); the other
+    aggregations ignore `weights`.
+    """
     gaps = per_feature_disparity(df, group, columns)
     if len(gaps) == 0:
         return 0.0
@@ -46,10 +75,15 @@ def missingness_disparity(df, group, columns=None, aggregation=PRIMARY) -> float
     if aggregation == "mean":
         return float(gaps.mean())
     if aggregation == "weighted":
-        cols = gaps.index
-        prevalence = pd.Series({c: float(df[c].isna().mean()) for c in cols})
-        total = prevalence.sum()
-        if total <= 0:
-            return float(gaps.mean())
-        return float((gaps * (prevalence / total)).sum())
-    raise ValueError(f"unknown aggregation {aggregation!r}")
+        w = pd.Series({c: float(df[c].isna().mean()) for c in gaps.index})
+    elif aggregation == "mi_weighted":
+        if weights is None:
+            raise ValueError("aggregation='mi_weighted' requires precomputed `weights` "
+                             "(per-feature MI); see compute_mi_weights().")
+        w = pd.Series(weights).reindex(gaps.index).fillna(0.0)
+    else:
+        raise ValueError(f"unknown aggregation {aggregation!r}")
+    total = w.sum()
+    if total <= 0:
+        return float(gaps.mean())
+    return float((gaps * (w / total)).sum())
