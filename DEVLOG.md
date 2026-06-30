@@ -44,6 +44,11 @@ fairness metric.
   (third dataset, Deequ/TFDV gate, paper integration).
 - **Literature:** all 16 §6–§8 citations VERIFIED against primary sources (see notes/sources.md);
   lit-review-notes organized; paper/related-work.md drafted.
+- **Pipeline placement (third leg) DONE:** `src/pipeline/gate.py` validation-stage gate (no
+  target/model needed); runnable Great Expectations integration (`integrations.py`, verified in an
+  isolated venv); Deequ/TFDV adapters as interface code. `experiment/demo_gate.py` shows PASS on
+  clean / FAIL on disparate batches, Adult + COMPAS. **All three contribution legs now exist:
+  validated metric, predictive validity (Adult), pipeline placement.**
 
 ---
 
@@ -60,6 +65,10 @@ src/fairness/metrics.py     equalized_odds_gap() = max(|ΔTPR|, |ΔFPR|); demogr
 src/pipeline/run_cell.py    one grid cell end-to-end: inject → statistic (pre-training) →
                             impute (impute_strategy, default median) → logreg → EO/DP on held-out
                             test. Deterministic by seed.
+src/pipeline/gate.py        MissingnessDisparityGate / evaluate_gate(): the validation-stage gate
+                            (no target/model) → GateResult(statistic, threshold, passed, ...).
+src/pipeline/integrations.py  framework adapters: great_expectations_gate (runnable) + Deequ/TFDV
+                            interface code. Same compose pattern on each framework's null-rate.
 experiment/benchmark/       load_adult.py: Adult via OpenML; sex as protected group.
                             load_compas.py: ProPublica COMPAS via URL + standard filter; race
                             (Caucasian vs African-American) as protected group. Both dropna to
@@ -73,6 +82,8 @@ experiment/run_all.py       --dataset {adult,compas,all}; per-dataset outputs un
                             results/{tables,figures}/<dataset>/.
 experiment/diagnose_compas.py  probes the COMPAS reversal: zero-inflation profile, noise floor,
                             injection/imputation variants -> results/tables/compas/diagnosis.csv.
+experiment/demo_gate.py     demonstrates the gate: clean batch PASS / disparate batch FAIL on
+                            Adult + COMPAS; runs the GE-backed path if GE is installed.
 ```
 
 ---
@@ -127,6 +138,47 @@ Key takeaways for the paper:
 
 *Convention: add a detailed entry here after every feature — what was built, how, why, the
 result, threats to validity, and follow-ups.*
+
+### 2026-07-01 — Validation-stage gate (pipeline placement)  (branch `feat/validation-gate`)
+
+**What was built** — the third leg of the contribution (pipeline placement):
+- `src/pipeline/gate.py` — framework-agnostic `MissingnessDisparityGate` / `evaluate_gate()`.
+  Computes the group-wise missingness-disparity statistic on a DataFrame and returns a
+  `GateResult` (statistic, threshold, passed, per-feature gaps, per-group null rates, message).
+  Needs **only features + the protected-group label — NO target, NO model** — so it runs at a
+  true pre-training ingestion gate.
+- `src/pipeline/integrations.py` — real adapters. `great_expectations_gate` is **RUNNABLE**: it
+  routes per-group null measurement through GE's own validation engine
+  (`expect_column_values_to_not_be_null`), then composes the disparity statistic + threshold.
+  `deequ_group_completeness` (PyDeequ `Completeness`) and `tfdv_group_null_rates` (TFDV
+  statistics) are interface code — same compose pattern, but require Spark/JVM and TensorFlow.
+- `experiment/demo_gate.py` — demo: clean batch PASSES, disparate batch FAILS, on Adult + COMPAS;
+  runs the GE path if GE is importable.
+- Made the `sklearn` import lazy in `disparity.py` (only `mi_weighted` needs it) so the gate runs
+  in a minimal environment.
+
+**How / why.** Deequ/TFDV/GE natively measure completeness but carry no group-wise / fairness
+notion. The integration pattern is identical for all three: let the framework measure the
+per-group, per-column null rate (its native strength), compose into the disparity statistic,
+enforce the threshold (our fairness leg). This concretely answers the "just Deequ with a fairness
+label" critique — it is a *demographic* disparity check with empirically-characterized predictive
+validity, not a bare null-rate constraint.
+
+**Result (runnable).**
+- Core gate (main venv): clean batch `D_max = 0.000` → PASS; disparate batch `D_max = 0.300` →
+  FAIL (worst feature `age`), on both Adult and COMPAS.
+- GE integration (isolated venv): the **same gate, measured through GE's engine**, FAILs the
+  disparate batch at 0.300 — verified end-to-end.
+
+**Env note.** GE 0.18.x pins numpy 1.26 / pandas 2.3, conflicting with the benchmark's numpy 2.x /
+pandas 3.x, so GE is an **optional** dependency in a separate `.venv-gate` (`requirements-gate.txt`,
+gitignored). Deequ (Spark/JVM) and TFDV (TensorFlow) don't install on Python 3.14, so their
+adapters are interface code against the documented APIs.
+
+**Threshold.** Demo uses `D_max` threshold 0.10 — the gate's policy knob; tune from the benchmark
+detector (AUROC) results.
+
+**Follow-up.** On infra with Spark/TF, run the Deequ/TFDV adapters to show cross-framework parity.
 
 ### 2026-07-01 — #3 Literature verification + related-work draft  (branch `feat/literature-verification`)
 
@@ -278,5 +330,5 @@ the signal as Adult-regime-specific) vs artifact (fix injection and re-test).
 2. **Paper integration** — assemble related-work + methods + results into `paper/`; normalize
    citations to ACM `acmart` numeric; capture the two outstanding first-party snippets
    (MDLA recommendation sentence, caton2024 full page).
-3. Beyond: implement the check as a validation-stage gate inside an existing data-quality
-   framework (Deequ / TFDV / Great Expectations) — the data-engineering contribution.
+3. On infra with Spark/TensorFlow, run the Deequ/TFDV adapters end-to-end (the GE adapter is
+   already runnable) to show cross-framework parity.
