@@ -87,6 +87,8 @@ experiment/diagnose_compas.py  probes the COMPAS reversal: zero-inflation profil
                             injection/imputation variants -> results/tables/compas/diagnosis.csv.
 experiment/demo_gate.py     demonstrates the gate: clean batch PASS / disparate batch FAIL on
                             Adult + COMPAS; runs the GE-backed path if GE is installed.
+experiment/make_figures.py  builds the paper figures from the saved grid CSVs ->
+                            results/figures/paper/ (PDF+PNG).
 ```
 
 ---
@@ -151,6 +153,11 @@ result, threats to validity, and follow-ups.*
   validation gate, discussion + limitations, conclusion, reproducibility, AI-use disclosure,
   references.
 - `paper/references.bib` — 16 BibTeX entries, all VERIFIED (DOIs/identifiers); preprints noted.
+- **Figures** (`experiment/make_figures.py` → `results/figures/paper/`, PDF+PNG): a gate
+  schematic, the Adult-vs-COMPAS contrast scatter (headline + the honest twist), the Adult
+  detector ROC, predictive-strength-by-mechanism bars, and the aggregation comparison. 5 figures
+  embedded in `main.tex` (all `\label`/`\ref` matched, all targets present). Generated from the
+  saved grid CSVs (no re-run needed).
 
 **How / why.** Assembled "draft from direction" from `research-brief` (argument), `experiment-plan`
 (method), `results/tables/<dataset>/` (**exact numbers quoted verbatim**), and the verified
