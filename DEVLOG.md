@@ -39,7 +39,11 @@ fairness metric.
   `research-brief.md` and `CLAUDE.md` are kept local-only (gitignored). Plan: flip public at
   preprint time.
 - **Issues:** #1 (MI-weighted) DONE (merged). #2 (COMPAS) DONE (merged). #6 (diagnose COMPAS
-  reversal) DONE (branch fix/diagnose-compas-reversal). #3 literature verification open.
+  reversal) DONE (merged). #3 (literature verification + related-work draft) DONE (branch
+  feat/literature-verification). All tracked issues complete; remaining work is optional
+  (third dataset, Deequ/TFDV gate, paper integration).
+- **Literature:** all 16 §6–§8 citations VERIFIED against primary sources (see notes/sources.md);
+  lit-review-notes organized; paper/related-work.md drafted.
 
 ---
 
@@ -123,6 +127,43 @@ Key takeaways for the paper:
 
 *Convention: add a detailed entry here after every feature — what was built, how, why, the
 result, threats to validity, and follow-ups.*
+
+### 2026-07-01 — #3 Literature verification + related-work draft  (branch `feat/literature-verification`)
+
+**What was done**
+- **Verified all 16 §6–§8 citations** against primary sources (DOI/arXiv/publisher/proceedings
+  pages) using 4 parallel research agents under strict integrity rules (fetch + record the URL +
+  a confirming snippet; mark PARTIAL/UNVERIFIED honestly; never guess). Cross-checked their
+  evidence before recording.
+- Rewrote `notes/sources.md`: every entry now `VERIFIED` with full APA-7 reference,
+  DOI/identifier, fetched URL, and a claim-check snippet.
+- Organized `notes/lit-review-notes.md` into the 4-part structure (did / did NOT / relation).
+- Drafted `paper/related-work.md` (draft-from-direction; author owns the synthesis line).
+
+**Corrections caught during verification (this is why the rule exists)**
+- `bhatti2025`: our citation had **no title**. Actual: "The influence of missing data mechanisms
+  and simple missing data handling techniques on fairness" (Bhatti, Sandrock & Nienkemper-Swanepoel).
+- `grafberger2022`: the article title is "Data distribution debugging in machine learning
+  pipelines" — **"mlinspect" is the tool name, not the title**. VLDB Journal 31(5),
+  DOI 10.1007/s00778-021-00726-w.
+- `feng2023`: **claim reworded** — the paper frames impute-then-classify as *harmful* to fairness,
+  not imputation as a positive "lever." Avoid mis-citation.
+- `tfdv`: a canonical paper exists (Caveness et al. 2020, SIGMOD) — cite it, not just docs.
+
+**Caveats recorded (not papered over)**
+- `caton2024`: metadata confirmed via the ACM DL *listing*, not a rendered full page.
+- `mdla2026`: medRxiv (Cloudflare) blocked a direct render; verified via the **resolving DOI**
+  (302 → medRxiv) + search-indexed *verbatim* snippets. The "integrate into clinical AI validation
+  pipelines" recommendation is consistent but not first-party quoted → that sub-claim is PARTIAL.
+
+**Result.** Zero `UNVERIFIED` rows remain. The verified set confirms the gap: each closest
+neighbor misses exactly one axis (model-level: jeong2022/feng2023; post-hoc audit: mdla2026;
+different signal: suarezferreira2025; fairness-agnostic tooling: deequ/tfdv/great_expectations/
+grafberger2022). The Bhatti-vs-Min tension reconciles as mechanism-*type* vs
+presence/correlation of missingness.
+
+**Follow-up.** Optional first-party render of the MDLA recommendation sentence and a caton2024
+full-page snippet; normalize citation style to ACM `acmart` numeric at paper integration.
 
 ### 2026-06-30 — #6 Diagnose the COMPAS reversal  (branch `fix/diagnose-compas-reversal`)
 
@@ -234,7 +275,8 @@ the signal as Adult-regime-specific) vs artifact (fix injection and re-test).
    does not hold (weak/null negative, diagnosed not-an-artifact). The paper claims *demonstrated,
    dataset/regime-dependent* predictive validity — not universal. Consider a third dataset to map
    the boundary.
-2. **#3 Literature** — verify §-referenced citations by reading sources; organize; draft
-   `paper/related-work.md`.
+2. **Paper integration** — assemble related-work + methods + results into `paper/`; normalize
+   citations to ACM `acmart` numeric; capture the two outstanding first-party snippets
+   (MDLA recommendation sentence, caton2024 full page).
 3. Beyond: implement the check as a validation-stage gate inside an existing data-quality
    framework (Deequ / TFDV / Great Expectations) — the data-engineering contribution.
