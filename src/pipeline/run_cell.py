@@ -19,7 +19,7 @@ from sklearn.pipeline import make_pipeline
 from sklearn.preprocessing import StandardScaler
 
 from src.fairness.metrics import demographic_parity_gap, equalized_odds_gap
-from src.metric.disparity import PRIMARY, missingness_disparity
+from src.metric.disparity import PRIMARY, compute_mi_weights, missingness_disparity
 from src.missingness.inject import inject_missingness
 
 
@@ -50,11 +50,16 @@ def run_cell(X, y, group, *, inject_columns, mechanism, base_rate, group_gap, se
                                base_rate=base_rate, group_gap=group_gap, seed=seed + 10_000,
                                mar_driver=mar_driver, column_weights=col_weights)
 
-    # 2. UPSTREAM CHECK: the statistic on injected train data, before any training.
-    # Compute all three aggregations (cheap) so the benchmark can report which predicts best;
-    # `statistic` remains the locked primary (max) for back-compat.
-    stats = {agg: missingness_disparity(Xtr_m, gtr, columns=inject_columns, aggregation=agg)
-             for agg in ("max", "mean", "weighted")}
+    # 2. UPSTREAM CHECK: the statistic on injected train data, before any training. Compute all
+    # aggregations (cheap) so the benchmark can report which predicts best; `statistic` remains the
+    # locked primary (max) for back-compat. mi_weighted needs model-free MI weights (computed on
+    # the injected train data + labels, pre-imputation/pre-model).
+    mi_weights = compute_mi_weights(Xtr_m, ytr, columns=inject_columns, seed=seed)
+    stats = {}
+    for agg in ("max", "mean", "weighted", "mi_weighted"):
+        kw = {"weights": mi_weights} if agg == "mi_weighted" else {}
+        stats[agg] = missingness_disparity(Xtr_m, gtr, columns=inject_columns,
+                                           aggregation=agg, **kw)
     statistic = stats[aggregation]
 
     # 3-4. fixed median impute + scale + logistic regression
@@ -73,7 +78,7 @@ def run_cell(X, y, group, *, inject_columns, mechanism, base_rate, group_gap, se
         "seed": seed, "aggregation": aggregation,
         "statistic": statistic,
         "statistic_max": stats["max"], "statistic_mean": stats["mean"],
-        "statistic_weighted": stats["weighted"],
+        "statistic_weighted": stats["weighted"], "statistic_mi": stats["mi_weighted"],
         "eo_gap": eo["eo_gap"], "tpr_gap": eo["tpr_gap"], "fpr_gap": eo["fpr_gap"],
         "dp_gap": dp,
     }

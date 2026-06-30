@@ -86,7 +86,9 @@ def detector_auroc(df, thresholds, stat="statistic_max", target="eo_gap_delta") 
 
 def aggregation_comparison(df, target="eo_gap_delta") -> pd.DataFrame:
     rows = []
-    for stat in ["statistic_max", "statistic_mean", "statistic_weighted"]:
+    stats = [s for s in ["statistic_max", "statistic_mean", "statistic_weighted", "statistic_mi"]
+             if s in df.columns]
+    for stat in stats:
         rows.append({"statistic": stat, "target": target,
                      "pearson_r": _pearson(df[stat], df[target]),
                      "spearman_r": _spearman(df[stat], df[target])})
