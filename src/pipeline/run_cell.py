@@ -24,7 +24,7 @@ from src.missingness.inject import inject_missingness
 
 
 def run_cell(X, y, group, *, inject_columns, mechanism, base_rate, group_gap, seed,
-             mar_driver=None, aggregation=PRIMARY):
+             mar_driver=None, aggregation=PRIMARY, impute_strategy="median"):
     y = np.asarray(y)
     group = np.asarray(group)
 
@@ -62,8 +62,8 @@ def run_cell(X, y, group, *, inject_columns, mechanism, base_rate, group_gap, se
                                            aggregation=agg, **kw)
     statistic = stats[aggregation]
 
-    # 3-4. fixed median impute + scale + logistic regression
-    model = make_pipeline(SimpleImputer(strategy="median"),
+    # 3-4. fixed impute (default median) + scale + logistic regression
+    model = make_pipeline(SimpleImputer(strategy=impute_strategy),
                           StandardScaler(),
                           LogisticRegression(max_iter=1000))
     model.fit(Xtr_m, ytr)

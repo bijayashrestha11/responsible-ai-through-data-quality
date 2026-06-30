@@ -30,15 +30,16 @@ fairness metric.
 - **Adult (primary, 450 cells):** `D_max` predicts the baseline-corrected EO gap at Pearson
   r ≈ 0.40 pooled, ≈ 0.52 under MNAR; detector AUROC ≈ 0.74–0.78; EO predicted more cleanly
   than DP.
-- **COMPAS (confirmatory, 450 cells): does NOT replicate — the relationship REVERSES**
-  (r ≈ −0.31 pooled, MNAR −0.53). The signal is dataset-dependent. Possibly partly a
-  zero-inflated-feature + median-impute artifact — flagged for diagnosis (see detailed log).
-  This is the project's most important "where it fails" result so far.
+- **COMPAS (confirmatory, 450 cells): does NOT replicate** (r ≈ −0.31, MNAR −0.53).
+  **Diagnosed (#6): not a zero-inflation/median artifact** — the negative sign is robust to
+  clean-feature injection (−0.42) and mean imputation (−0.22). Honest read: weak/null negative
+  → the Adult signal does NOT generalize; predictive validity is dataset/regime-dependent. The
+  project's most important "where it fails" result.
 - **Published:** private GitHub repo `bijayashrestha11/responsible-ai-through-data-quality`.
   `research-brief.md` and `CLAUDE.md` are kept local-only (gitignored). Plan: flip public at
   preprint time.
-- **Issues:** #1 (MI-weighted) DONE (merged, PR #4). #2 (COMPAS) DONE (branch feat/compas-arm).
-  #3 literature verification open. Candidate new issue: diagnose the COMPAS reversal.
+- **Issues:** #1 (MI-weighted) DONE (merged). #2 (COMPAS) DONE (merged). #6 (diagnose COMPAS
+  reversal) DONE (branch fix/diagnose-compas-reversal). #3 literature verification open.
 
 ---
 
@@ -53,7 +54,8 @@ src/metric/disparity.py     per_feature_disparity() + missingness_disparity(aggr
                             prevalence), mi_weighted (by MI with target — PR #4).
 src/fairness/metrics.py     equalized_odds_gap() = max(|ΔTPR|, |ΔFPR|); demographic_parity_gap().
 src/pipeline/run_cell.py    one grid cell end-to-end: inject → statistic (pre-training) →
-                            median-impute → logreg → EO/DP on held-out test. Deterministic by seed.
+                            impute (impute_strategy, default median) → logreg → EO/DP on held-out
+                            test. Deterministic by seed.
 experiment/benchmark/       load_adult.py: Adult via OpenML; sex as protected group.
                             load_compas.py: ProPublica COMPAS via URL + standard filter; race
                             (Caucasian vs African-American) as protected group. Both dropna to
@@ -65,6 +67,8 @@ experiment/analyze.py       add_baseline_delta(), scatter, detector AUROC, regim
                             aggregation comparison, EO-vs-DP contrast.
 experiment/run_all.py       --dataset {adult,compas,all}; per-dataset outputs under
                             results/{tables,figures}/<dataset>/.
+experiment/diagnose_compas.py  probes the COMPAS reversal: zero-inflation profile, noise floor,
+                            injection/imputation variants -> results/tables/compas/diagnosis.csv.
 ```
 
 ---
@@ -119,6 +123,45 @@ Key takeaways for the paper:
 
 *Convention: add a detailed entry here after every feature — what was built, how, why, the
 result, threats to validity, and follow-ups.*
+
+### 2026-06-30 — #6 Diagnose the COMPAS reversal  (branch `fix/diagnose-compas-reversal`)
+
+**Question.** Is COMPAS's reversed correlation (`r(D_max, eo_gap_delta) = −0.31`) a true
+counterexample or a structural artifact of zero-inflated count features + median imputation?
+
+**What was built**
+- `experiment/diagnose_compas.py` — three probes: (1) zero-inflation profile of the injection
+  features (COMPAS vs Adult); (2) noise floor = mean within-(mech,rate,gap) seed-std of `eo_gap`
+  vs mean `|eo_gap_delta|`; (3) design variants that re-run the COMPAS grid under cleaner
+  injection sets and mean imputation, reporting pooled `r` each time. Writes
+  `results/tables/compas/diagnosis.csv`.
+- Parametrized imputation: `run_cell(..., impute_strategy="median")` and
+  `run_grid(..., impute_strategy=...)` — default unchanged, so this probe could vary it.
+
+**Findings**
+- *Probe 1:* COMPAS injection features are heavily zero-inflated (`juv_*` 92–96% zero,
+  `priors_count` 32%); only `age` is clean. (Adult also has zero-inflated features but clean
+  ones too.)
+- *Probe 2:* mean `|Δ EO gap|` = 0.027 vs mean seed-spread of `eo_gap` = 0.062 → effect is
+  below the spread. **Caveat:** that spread also includes disparity-*pattern* variation (weights
+  are seed-derived), so it overstates pure noise — treat as a rough upper bound.
+- *Probe 3 (decisive):* the negative sign does **not** recover — `age`-only injection −0.42,
+  two-least-zero-inflated −0.54, mean imputation −0.22. All negative.
+
+**Verdict.** **NOT a zero-inflation/median artifact** — the sign is robust to exactly the knobs
+the artifact hypothesis blamed. Honest read: COMPAS shows a **weak but robust negative/null**
+relationship; the Adult-positive signal **does not generalize**. Because the effect is small
+(partly within noise), frame it as *"no usable signal on COMPAS"*, not a strong opposite effect.
+
+**Implication for the paper.** Predictive validity is demonstrated on Adult and is
+**dataset/regime-dependent**; COMPAS is a domain where the check does not hold. One positive +
+one null/negative benchmark ⇒ the claim must be **scoped, not universal** — which is itself the
+adjudication of the Bhatti (null) vs Min/Asif/Vaidya (positive) tension.
+
+**Follow-up.** Understand *why* the sign is negative on COMPAS (where unprivileged = majority);
+and seek a third dataset to map the boundary of where the signal holds.
+
+**Repro:** `python experiment/diagnose_compas.py` (~40s).
 
 ### 2026-06-30 — #2 COMPAS confirmatory arm  (branch `feat/compas-arm`)
 
@@ -187,9 +230,10 @@ the signal as Adult-regime-specific) vs artifact (fix injection and re-test).
 
 ## Next steps
 
-1. **Diagnose the COMPAS reversal** (candidate new issue) — noise floor, alternative injection
-   features / imputation, per-cell view. Decide: true counterexample vs zero-inflation artifact.
-   This now gates how strongly the generalization claim can be made.
+1. **Frame the scoped claim** — Adult: signal holds (r ≈ 0.4–0.52, MNAR-strongest); COMPAS:
+   does not hold (weak/null negative, diagnosed not-an-artifact). The paper claims *demonstrated,
+   dataset/regime-dependent* predictive validity — not universal. Consider a third dataset to map
+   the boundary.
 2. **#3 Literature** — verify §-referenced citations by reading sources; organize; draft
    `paper/related-work.md`.
 3. Beyond: implement the check as a validation-stage gate inside an existing data-quality

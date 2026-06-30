@@ -73,9 +73,12 @@ from the dataset's inherent unfairness.
   MNAR). Group-correlated missingness does not predict EO degradation here; if anything it
   slightly reduces the measured gap. The signal is **dataset-dependent**, not universal — an
   honest "where it fails" result that mirrors the unsettled state of the literature.
-- This may be partly a structural artifact (COMPAS's injection features are heavily
-  zero-inflated counts, and MNAR masking + median imputation interact with that), so the
-  reversal is flagged for diagnosis before drawing strong conclusions. See `DEVLOG.md`.
+- **Diagnosed** (`experiment/diagnose_compas.py`): the reversal is **not** a zero-inflation /
+  median-imputation artifact — the negative sign is robust to injecting only the clean `age`
+  feature (−0.42) and to mean imputation (−0.22). The effect is small (partly within noise), so
+  the honest read is a **weak/null negative** relationship: the Adult signal simply does not
+  generalize to COMPAS. Predictive validity is **demonstrated and dataset/regime-dependent**, not
+  universal. See `DEVLOG.md`.
 
 Figures: `results/figures/<dataset>/`. Tables: `results/tables/<dataset>/`. Full history and
 rationale: [`DEVLOG.md`](DEVLOG.md).
@@ -133,11 +136,11 @@ Tracked as GitHub issues:
 
 1. ~~Importance-aware (MI-weighted) statistic~~ — **done**: implemented and validated (best
    aggregation, r ≈ 0.42; see Results). `D_max` stays the labels-free default.
-2. ~~COMPAS confirmatory arm~~ — **done**: built and run. Signal does *not* replicate (reverses;
-   see Results) — flagged for diagnosis.
-3. **Diagnose the COMPAS reversal** — is it a true counterexample or a zero-inflation/imputation
-   artifact? Gates how strongly generalization can be claimed.
+2. ~~COMPAS confirmatory arm~~ — **done**: signal does *not* replicate (reverses; see Results).
+3. ~~Diagnose the COMPAS reversal~~ — **done**: not an artifact; weak/null negative → the signal
+   is dataset/regime-dependent (claim scoped, not universal).
 4. **Literature** — verify citations and draft the related-work section.
+5. Optional: a third dataset to map where the signal holds vs. fails.
 
 Planned beyond that: implement the check as a validation-stage gate inside an existing
 data-quality framework (Deequ / TFDV / Great Expectations).
