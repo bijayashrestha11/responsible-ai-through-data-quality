@@ -1,80 +1,118 @@
 # Responsible AI Through Data Quality
 
-Group-correlated missingness as an automatable upstream data-quality check that predicts
-downstream fairness degradation — with a defended pipeline placement.
+Group-correlated missingness as an automatable **upstream** data-quality check that predicts
+downstream fairness degradation — *before a model is trained* — with a defended pipeline
+placement.
 
-> **Status:** scaffolding. See `research-brief.md` (the what), `CLAUDE.md` (the how, incl. the
-> verify-every-citation rule), and `experiment-plan.md` (the benchmark design).
+Most fairness work intervenes at the model. This project intervenes upstream, in the data
+pipeline: a cheap, model-free **missingness-disparity statistic** computed at ingestion that
+forecasts equalized-odds degradation, plus an empirical characterization of where that signal
+holds and where it fails.
+
+> **Status:** benchmark built and reproducible; results are preliminary (work in progress).
+> The benchmark design and rationale live in [`experiment-plan.md`](experiment-plan.md).
+
+---
+
+## Quickstart
+
+```bash
+python3 -m venv .venv
+.venv/bin/pip install -r requirements.txt
+.venv/bin/python experiment/run_all.py      # ~80s; regenerates all tables + figures
+```
+
+The first run fetches **Adult** (Census Income) via `scikit-learn`'s OpenML loader and caches
+it under `results/cache/` (gitignored); later runs are offline. Seeds are fixed, so a clone
+reproduces every figure and table.
+
+## The check (the proposed artifact)
+
+`D_max` — the **maximum across features** of the absolute difference in per-feature
+missingness rate between protected groups, computed pre-training:
+
+```
+D_max = max_f | miss_rate(group=1, f) − miss_rate(group=0, f) |
+```
+
+Model-free and cheap to compute at a pipeline validation gate. `mean` and `weighted`
+aggregations are implemented as secondary variants for comparison; the benchmark finds they
+predict comparably, so the simplest (`max`) is the locked primary.
+
+## What the benchmark does
+
+For each grid cell — `mechanism × group-correlation × overall-rate × seed` — it injects
+missingness of *known* mechanism (MCAR / MAR / MNAR) and group-correlation into the complete
+data, computes `D_max` pre-training, then imputes (fixed median), trains a fixed model
+(logistic regression), and measures the **equalized-odds gap** (primary) and demographic-parity
+gap (secondary) on a held-out test set. The primary target is the *baseline-corrected* EO gap
+(Δ above the matching no-disparity cell), which isolates the group-correlated-missingness effect
+from the dataset's inherent unfairness.
+
+## Results so far (Adult, 450 cells)
+
+- `D_max` predicts the baseline-corrected EO gap with Pearson **r ≈ 0.40** pooled, rising to
+  **r ≈ 0.52 under MNAR** — the regime that is both most harmful and most predictable.
+- Early-warning detector: **AUROC ≈ 0.74–0.78** for flagging EO-gap exceedance.
+- The statistic predicts EO degradation more cleanly than demographic parity, as expected.
+- Honest ceiling: because the statistic is model-free it is blind to feature importance, which
+  caps its predictive power — motivating an importance-aware variant (see Roadmap).
+
+Figures: `results/figures/`. Tables: `results/tables/`.
 
 ---
 
 ## Repository layout
 
 ```
-research-brief.md          # contribution, gap, locked decisions — source of truth
-CLAUDE.md                  # working rules for Claude Code: citations, conventions, disclosure
-experiment-plan.md         # benchmark experiment design
+experiment-plan.md         # benchmark design + rationale
+requirements.txt
 README.md                  # this file
 
-notes/
-  sources.md               # VERIFIED citations only: full ref + identifier + verification note
-  lit-review-notes.md      # organized per research-brief §9 (4-part structure)
-
-paper/
-  outline.md
-  related-work.md          # drafted from verified notes
-  main.tex                 # acmart numeric (author's choice; arXiv target)
-
 src/
-  missingness/             # missingness injection (MCAR/MAR/MNAR, group-correlated)
-  metric/                  # the missingness-disparity statistic (the proposed artifact)
-  fairness/                # equalized-odds + demographic-parity computation
-  pipeline/                # the check as a validation-stage gate (Deequ/GE/TFDV integration)
+  missingness/inject.py    # MCAR/MAR/MNAR injection with a group-correlation knob
+  metric/disparity.py      # the missingness-disparity statistic (D_max; +mean/weighted)
+  fairness/metrics.py      # equalized-odds + demographic-parity gaps
+  pipeline/run_cell.py     # one grid cell, end to end
 
 experiment/
-  benchmark/               # Adult + COMPAS controlled study (the scientific core)
-  claims/                  # single real-world demonstration slice (minimal; may be cut)
-  configs/                 # grid + seed definitions
+  benchmark/load_adult.py  # Adult loader (public, cached)
+  configs/grid.py          # grid + seed definitions
+  sweep.py                 # run the full grid
+  analyze.py               # scatter, detector AUROC, regime + aggregation comparison
   run_all.py               # one command → regenerates all figures/tables
+  claims/                  # (reserved) single real-world demonstration slice
+
+notes/
+  sources.md               # citations + verification status
+  lit-review-notes.md      # organized related-work notes
 
 results/
-  figures/
-  tables/
-  cache/                   # cached intermediates so run_all is fast + reproducible
+  figures/  tables/        # committed outputs
+  cache/                   # cached intermediates (gitignored)
+paper/                     # (planned) outline, related-work, main.tex
 ```
 
 ## Data handling
 
-- **Benchmark:** Adult, COMPAS — public, committable references/loaders, fully reproducible.
-- **Claims:** raw data NEVER committed. Only derived, aggregate, non-identifiable outputs.
-  No PHI or identifiers in code, commits, or prose.
+- **Benchmark:** Adult (and, planned, COMPAS) — public datasets, fully reproducible, no
+  special access.
+- **Claims/EHR:** raw data is **never** committed — only derived, aggregate, non-identifiable
+  outputs. No PHI or identifiers in code, commits, or prose.
 
-## Reproducibility contract
+## Reproducibility
 
-Fixed seeds; `python experiment/run_all.py` regenerates every figure and table from cache.
-A reviewer (or a professor evaluating this repo) can clone and rerun the benchmark arm with no
-special access.
+Fixed seeds; `python experiment/run_all.py` regenerates every figure and table. A reviewer can
+clone and rerun the benchmark arm with no special access.
 
----
+## Roadmap
 
-## First-session checklist for Claude Code
+Tracked as GitHub issues:
 
-The two tracks below are independent — run in parallel.
+1. **Importance-aware (MI-weighted) statistic** — weight per-feature disparity by mutual
+   information with the target (still model-free) to lift the predictive ceiling.
+2. **COMPAS confirmatory arm** — robustness that the signal isn't an Adult artifact.
+3. **Literature** — verify citations and draft the related-work section.
 
-**Track A — Build (critical path to the empirical claim):**
-1. Pin the missingness-disparity statistic definition (`src/metric/`) — see experiment-plan
-   "metric under test." Decide max-vs-mean aggregation and justify.
-2. Implement missingness injection (`src/missingness/`) for MCAR/MAR/MNAR + group correlation.
-3. Implement fairness metrics (`src/fairness/`): equalized-odds gap (primary), demographic
-   parity (secondary).
-4. Wire the per-cell pipeline + grid/seed configs; get Adult running end to end before COMPAS.
-5. Run the grid, produce the scatter + detector results.
-
-**Track B — Literature (verify → organize → draft):**
-1. Verify every reference in `research-brief.md` §6–§8 against the real source; write to
-   `notes/sources.md`. (MDLA already read in full — still record it.)
-2. Organize into `notes/lit-review-notes.md` using the 4-part structure (research-brief §9).
-3. Draft `paper/related-work.md` from verified notes — author owns the synthesis.
-
-**Before anything:** fill the disclosure statement in `CLAUDE.md` to match the real workflow,
-and arrange the arXiv endorsement (it can take days).
+Planned beyond that: implement the check as a validation-stage gate inside an existing
+data-quality framework (Deequ / TFDV / Great Expectations).
