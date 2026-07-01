@@ -162,3 +162,58 @@ https://github.com/great-expectations/great_expectations
 - Identifier: greatexpectations.io ; GitHub repo (Apache-2.0)
 - Verified: official site + repo. Expectations = "unit tests for your data" (schemas, ranges,
   nulls, uniqueness); **no fairness linkage**. No single canonical DOI/paper — cite the tool.
+
+---
+
+## Foundational anchors (literature-gaps pass, 2026-07-01)
+
+All verified via primary/open-access sources (ACM DL landing pages 403 direct fetch, so several
+confirmed via arXiv / proceedings PDFs / publisher metadata — noted per entry).
+
+**sambasivan2021 — VERIFIED.** Sambasivan, N., Kapania, S., Highfill, H., Akrong, D., Paritosh, P.,
+& Aroyo, L. M. (2021). "Everyone wants to do the model work, not the data work": Data cascades in
+high-stakes AI. *CHI 2021*, Article 39.
+- Identifier: DOI 10.1145/3411764.3445518
+- Verified: ACM PDF (via index) + abstract. "compounding events causing negative, downstream
+  effects from data issues." → supports the data-cascades framing precedent (upstream → downstream).
+
+**gebru2021datasheets — VERIFIED.** Gebru, T., Morgenstern, J., Vecchione, B., Vaughan, J. W.,
+Wallach, H., Daumé III, H., & Crawford, K. (2021). Datasheets for datasets. *CACM 64*(12), 86–92.
+- Identifier: DOI 10.1145/3458723; arXiv:1803.09010
+- Verified: arXiv + CACM header (Dec 2021, vol 64 no 12). Documents "motivation, composition,
+  collection process, recommended uses." → prose dataset documentation (contrast to our automated
+  statistic).
+
+**pushkarna2022datacards — VERIFIED.** Pushkarna, M., Zaldivar, A., & Kjartansson, O. (2022). Data
+cards: Purposeful and transparent dataset documentation for responsible AI. *ACM FAccT 2022*,
+1776–1826.
+- Identifier: DOI 10.1145/3531146.3533231; arXiv:2204.01075
+- Verified: open FAccT proceedings PDF. "transparent, purposeful and human-centered documentation
+  of datasets." → the one optional documentation ref.
+
+**rubin1976 — VERIFIED.** Rubin, D. B. (1976). Inference and missing data. *Biometrika 63*(3),
+581–592.
+- Identifier: DOI 10.1093/biomet/63.3.581
+- Verified: OUP/Biometrika page. Introduces "missing at random." ⚠️ Note: Rubin 1976 is the origin
+  of MAR; the full MCAR/MAR/MNAR three-way naming is consolidated in Little & Rubin — cite both for
+  the taxonomy.
+
+**littlerubin — VERIFIED.** Little, R. J. A., & Rubin, D. B. (2019). *Statistical analysis with
+missing data* (3rd ed.). Wiley.
+- Identifier: DOI 10.1002/9781119482260; ISBN 978-0-470-52679-8
+- Verified: Wiley / Wiley Online Library. Standard textbook treatment of missing-data mechanisms.
+  3rd ed. (2019) is the current most-citable edition (1st 1987, 2nd 2002).
+
+**hardt2016 — VERIFIED.** Hardt, M., Price, E., & Srebro, N. (2016). Equality of opportunity in
+supervised learning. *Advances in NeurIPS 29*.
+- Identifier: arXiv:1610.02413; NeurIPS 2016
+- Verified: arXiv + papers.nips.cc. Defines equalized odds / equal opportunity. ⚠️ Page range
+  ambiguous across indexes (3315–3323 vs 3323–3331) → pages omitted in bib; verify vs the exact
+  proceedings PDF before final submission.
+
+**chouldechova2017 — VERIFIED.** Chouldechova, A. (2017). Fair prediction with disparate impact: A
+study of bias in recidivism prediction instruments. *Big Data 5*(2), 153–163.
+- Identifier: DOI 10.1089/big.2016.0047; arXiv:1703.00056; PMID 28632438
+- Verified: arXiv + SAGE/Liebert listing. Quote: "the criteria cannot all be simultaneously
+  satisfied when recidivism prevalence differs across groups." → the impossibility result we name
+  (primary source; replaces routing via caton2024).

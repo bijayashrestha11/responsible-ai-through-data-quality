@@ -13,12 +13,17 @@ validation tooling, and (4) the two closest competitors we differentiate from.
 ## Data quality as a fairness concern
 
 A recurring theme in responsible ML is that fairness harms often originate in the data rather than
-the model. Martínez-Plumed et al. (2021) make the point sharply for missing data, observing that
-much fairness work has "simply ignored missing data," and frame missingness as a neglected
-dimension of fairness. Surveys of the field (Caton & Haas, 2024) catalogue the now-standard
-group-fairness metrics and the impossibility results among them — context we rely on when we
-commit deliberately to equalized odds as our downstream target. This paper takes the data-quality
-premise literally and asks what can be measured *upstream*, before a model exists.
+the model. This data-first stance has a lineage: Sambasivan et al. (2021) show that upstream data
+problems compound into downstream "data cascades," and a strand of data documentation — datasheets
+(Gebru et al., 2021), data cards (Pushkarna et al., 2022) — records a dataset's provenance,
+composition, and quality in prose. Our contribution sits at the quantitative, automated end of that
+spectrum: instead of prose documentation, a machine-checkable disparity statistic enforced at a
+validation gate. Martínez-Plumed et al. (2021) make the point sharply for missing data, observing
+that much fairness work has "simply ignored missing data." For the downstream side, we adopt
+equalized odds (Hardt et al., 2016) as our primary metric and name the impossibility result
+(Chouldechova, 2017) that constrains it when group base rates differ; a survey (Caton & Haas, 2024)
+gives the broader landscape. This paper takes the data-quality premise literally and asks what can
+be measured *upstream*, before a model exists.
 
 ## Missingness and fairness
 
@@ -129,3 +134,20 @@ honestly, via a controlled benchmark, where the signal holds and where it does n
   fairness. *International Journal of Data Science and Analytics, 12*(2), 101–119.
   https://doi.org/10.1007/s41060-021-00259-z
 - Great Expectations [Computer software]. https://github.com/great-expectations/great_expectations
+- Sambasivan, N., Kapania, S., Highfill, H., Akrong, D., Paritosh, P., & Aroyo, L. M. (2021).
+  "Everyone wants to do the model work, not the data work": Data cascades in high-stakes AI.
+  *CHI 2021*, Article 39. https://doi.org/10.1145/3411764.3445518
+- Gebru, T., Morgenstern, J., Vecchione, B., Vaughan, J. W., Wallach, H., Daumé III, H., &
+  Crawford, K. (2021). Datasheets for datasets. *Communications of the ACM, 64*(12), 86–92.
+  https://doi.org/10.1145/3458723
+- Pushkarna, M., Zaldivar, A., & Kjartansson, O. (2022). Data cards: Purposeful and transparent
+  dataset documentation for responsible AI. *ACM FAccT 2022*, 1776–1826.
+  https://doi.org/10.1145/3531146.3533231
+- Rubin, D. B. (1976). Inference and missing data. *Biometrika, 63*(3), 581–592.
+  https://doi.org/10.1093/biomet/63.3.581
+- Little, R. J. A., & Rubin, D. B. (2019). *Statistical Analysis with Missing Data* (3rd ed.). Wiley.
+  https://doi.org/10.1002/9781119482260
+- Hardt, M., Price, E., & Srebro, N. (2016). Equality of opportunity in supervised learning.
+  *Advances in NeurIPS 29*. arXiv:1610.02413.
+- Chouldechova, A. (2017). Fair prediction with disparate impact: A study of bias in recidivism
+  prediction instruments. *Big Data, 5*(2), 153–163. https://doi.org/10.1089/big.2016.0047

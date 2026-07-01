@@ -159,6 +159,32 @@ Key takeaways for the paper:
 *Convention: add a detailed entry here after every feature — what was built, how, why, the
 result, threats to validity, and follow-ups.*
 
+### 2026-07-01 — Task 8: fill foundational literature gaps  (branch `feat/literature-gaps`)
+
+**What was done.** Verified (2 parallel agents, strict fetch-and-quote) and added **7 foundational
+citations** — no padding, no restructuring, closest-competitors/gap paragraphs untouched:
+- **P1 data-centric / documentation** → "Data quality as a fairness concern" (related-work.md +
+  main.tex): `sambasivan2021` (data cascades, CHI'21) as the framing precedent; `gebru2021datasheets`
+  (datasheets, CACM 64(12)) + `pushkarna2022datacards` (data cards, FAccT'22) as prose
+  documentation — we positioned our work as the *quantitative/automated* end of that spectrum.
+- **P2 missingness foundations** → §Predictive-Validity Benchmark (methods): `rubin1976`
+  (Biometrika 63(3), MAR origin) + `littlerubin` (Wiley, 3rd ed. 2019) for the MCAR/MAR/MNAR
+  taxonomy, which previously appeared uncited.
+- **P3 fairness primary sources** → related-work + methods: `hardt2016` (equalized odds, primary
+  definition) and `chouldechova2017` (the impossibility result we name) — replacing the prior route
+  via `caton2024` for our OWN metric and the impossibility; `caton2024` kept as the survey cite.
+- **P4 (regulatory / healthcare) SKIPPED** per the scope guard (arXiv-only-optional; target is arXiv).
+
+**Verification.** All 7 VERIFIED against primary/open sources, recorded in `notes/sources.md` with
+snippets. ACM DL 403'd direct fetches → verified via arXiv / open proceedings PDFs / publisher
+metadata. Honest caveats recorded: Hardt page range ambiguous across indexes (**pages omitted** in
+bib; verify vs the proceedings PDF before submission); Rubin 1976 is the MAR origin with the full
+three-way naming consolidated in Little & Rubin (both cited). **Nothing left UNVERIFIED; nothing
+guessed.**
+
+**Consistency.** 23 cite keys ↔ 23 bib entries; braces balanced; `references.bib`, `notes/sources.md`,
+`related-work.md`, and main.tex §Related Work + methods all updated.
+
 ### 2026-07-01 — Task 7: reporting-precision pass (round 2)  (branch `feat/paper-precision-2`)
 
 **What was done.** Round-2 precision pass on `main.tex`:
