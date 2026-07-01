@@ -86,9 +86,10 @@ inside an existing data-quality framework, the leg that makes it a data-engineer
 Our standing contribution is the predictive-validity evidence---a controlled, reproducible
 benchmark relating a pre-training statistic to downstream fairness, with a derived threshold---that
 audit-oriented work such as MDLA~\cite{mdla2026} identifies as needed but does not itself provide.
-Equally central is where the signal \emph{fails}: across three datasets we find it holds on Adult, reverses on COMPAS, and vanishes
-on German Credit, and we identify the two properties---group structure and sample size---that
-govern which regime obtains. The honesty of that boundary is a contribution, not a caveat.
+Equally central is where the signal \emph{fails}: across three datasets we find it holds on
+Adult, reverses on COMPAS, and vanishes on German Credit, and we identify the two
+properties---group structure and sample size---that govern which regime obtains. The honesty of
+that boundary is a contribution, not a caveat.
 
 \section{Related Work}\label{sec:related}
 \textbf{Data quality as a fairness concern.}
@@ -264,6 +265,13 @@ dataset identity.}
 \label{fig:flip}
 \end{figure}
 
+\begin{figure}[t]\centering
+\includegraphics[width=0.84\columnwidth]{fig3_mechanism_r}
+\caption{Predictive strength ($r$ between $D_{\max}$ and $\Delta_{\mathrm{EO}}$) by mechanism:
+positive on Adult---strongest under MNAR---and negative across mechanisms on COMPAS.}
+\label{fig:mech}
+\end{figure}
+
 \textbf{German Credit: null---a detectability limit.} On German Credit the correlation is null
 ($r=-0.02$), even though its structure predicts a positive sign by the rule above (the
 unprivileged group is a minority with a lower base rate). The effect is not small---the mean
@@ -291,12 +299,7 @@ monotonically to $0.40$ at full size.}
 a strong MAR signal ($r=+0.44$); we therefore report this per-mechanism variation as unexplained
 rather than over-interpret it.
 
-\begin{figure}[t]\centering
-\includegraphics[width=0.84\columnwidth]{fig3_mechanism_r}
-\caption{Predictive strength ($r$ between $D_{\max}$ and $\Delta_{\mathrm{EO}}$) by mechanism:
-positive on Adult---strongest under MNAR---and negative across mechanisms on COMPAS.}
-\label{fig:mech}
-\end{figure}
+\section{The Validation Gate}\label{sec:gate}
 
 \begin{figure*}[t]\centering
 \includegraphics[width=0.86\textwidth]{fig0_gate_schematic}
@@ -307,13 +310,12 @@ features and the protected-attribute label---no target and no model.}
 \label{fig:gate}
 \end{figure*}
 
-\section{The Validation Gate}\label{sec:gate}
 The statistic becomes a data-engineering artifact when placed at a pre-training validation
 stage (Figure~\ref{fig:gate}). Our gate computes $D_{\max}$ on an incoming batch and fails the
-pipeline when it exceeds
-a policy threshold $\tau$; it requires only the features and the protected-attribute label---no
-target, no model. We \emph{derive} $\tau$ from the benchmark rather than assert it: on Adult, the
-F1-optimal cutoff for flagging a meaningful equalized-odds increase is $D_{\max}\approx0.10$
+pipeline when it exceeds a policy threshold $\tau$; it requires only the features and the
+protected-attribute label---no target, no model. We \emph{derive} $\tau$ from the benchmark
+rather than assert it: on Adult, the F1-optimal cutoff for flagging a meaningful equalized-odds
+increase is $D_{\max}\approx0.10$
 (recall $0.72$, precision $0.26$; a precision-$0.8$ operating point is unreachable). The gate is
 thus best read as a \emph{high-recall screen}---a sensitive early warning that flags data for
 review, not a precise oracle---which is the appropriate role for a validation gate and consistent
@@ -343,8 +345,8 @@ The claim is deliberately bounded, and mapping the boundary is part of the contr
 three datasets the signal holds (Adult), reverses (COMPAS), and vanishes (German), and two axes
 explain which regime obtains: its \emph{sign} is governed by group structure (the encoding-flip
 result) and its \emph{detectability} by sample size (the German null, reproduced by subsampling
-Adult with all else fixed). This is itself the
-adjudication of the conflicting prior results~\cite{bhatti2025,min2025}. We are careful not to
+Adult with all else fixed). This is itself the adjudication of the conflicting prior
+results~\cite{bhatti2025,min2025}. We are careful not to
 over-read the sign: the encoding-flip experiment identifies that the sign tracks \emph{which group}
 carries the excess missingness, but the three structural properties that describe that group
 (minority status, the sign of the base-rate difference, and the group--target correlation) co-vary
