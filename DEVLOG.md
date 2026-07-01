@@ -30,11 +30,12 @@ fairness metric.
 - **Adult (primary, 450 cells):** `D_max` predicts the baseline-corrected EO gap at Pearson
   r ≈ 0.40 pooled, ≈ 0.52 under MNAR; detector AUROC ≈ 0.74–0.78; EO predicted more cleanly
   than DP.
-- **COMPAS (confirmatory, 450 cells): does NOT replicate** (r ≈ −0.31, MNAR −0.53).
-  **Diagnosed (#6): not a zero-inflation/median artifact** — the negative sign is robust to
-  clean-feature injection (−0.42) and mean imputation (−0.22). Honest read: weak/null negative
-  → the Adult signal does NOT generalize; predictive validity is dataset/regime-dependent. The
-  project's most important "where it fails" result.
+- **COMPAS (confirmatory, 450 cells): reverses** (r ≈ −0.31). **Diagnosed (#6): not a
+  zero-inflation/median artifact.** **Explained (Task 1): a boundary condition** — flipping the
+  protected-group encoding flips the sign in BOTH datasets (COMPAS −0.31→+0.42, Adult
+  +0.40→−0.36), so the sign is governed by *which group carries the excess missingness* (positive
+  when it falls on the smaller/lower-base-rate group). Magnitude |r|≈0.4 preserved throughout.
+  Benign for the gate (fires on |D_max|); the third dataset (Task 2) disambiguates the confound.
 - **Published:** private GitHub repo `bijayashrestha11/responsible-ai-through-data-quality`.
   `research-brief.md` and `CLAUDE.md` are kept local-only (gitignored). Plan: flip public at
   preprint time.
@@ -85,6 +86,8 @@ experiment/run_all.py       --dataset {adult,compas,all}; per-dataset outputs un
                             results/{tables,figures}/<dataset>/.
 experiment/diagnose_compas.py  probes the COMPAS reversal: zero-inflation profile, noise floor,
                             injection/imputation variants -> results/tables/compas/diagnosis.csv.
+experiment/why_compas.py    boundary-condition analysis: structural scalars + encoding-flip test
+                            -> results/tables/compas/why_reversal.csv.
 experiment/demo_gate.py     demonstrates the gate: clean batch PASS / disparate batch FAIL on
                             Adult + COMPAS; runs the GE-backed path if GE is installed.
 experiment/make_figures.py  builds the paper figures from the saved grid CSVs ->
@@ -143,6 +146,44 @@ Key takeaways for the paper:
 
 *Convention: add a detailed entry here after every feature — what was built, how, why, the
 result, threats to validity, and follow-ups.*
+
+### 2026-07-01 — Task 1: WHY the COMPAS reversal (a boundary condition)  (branch `analysis/compas-why`)
+
+**Question.** Can the COMPAS sign reversal ($r=-0.31$ vs Adult $+0.40$) be explained as a
+*boundary condition* rather than just "dataset-dependent"?
+
+**What was done.** `experiment/why_compas.py`: computed structural scalars for Adult and COMPAS
+(is the excess-missingness group a minority/majority; signed base-rate difference unpriv$-$priv;
+size ratio; corr(protected, target)), and ran the leading hypothesis — the **encoding-flip
+test**: re-run each grid with the protected-group encoding flipped so the OTHER group carries the
+injected excess missingness (Adult as control). → `results/tables/compas/why_reversal.csv`.
+
+**Result — decisive.** Flipping the encoding **flips the sign of the correlation in both
+datasets**, with magnitude preserved:
+- COMPAS: $-0.31 \rightarrow +0.42$
+- Adult: $+0.40 \rightarrow -0.36$
+
+So the sign is **not a fixed dataset property** — it is governed by *which group carries the
+excess missingness*. Only the sign moves; $|r|\approx0.4$ throughout (the statistic carries
+predictive signal in every case).
+
+**Boundary condition.** Across all four configs, three scalars each perfectly separate $+r$ from
+$-r$: the excess-missingness group being the **minority** ($\to +r$), the sign of the base-rate
+difference, and the sign of corr(protected, target). In Adult vs COMPAS these three move together,
+so two datasets cannot isolate a single cause — but the reportable mechanism is: **the statistic
+predicts EO degradation with positive sign when the excess missingness falls on the smaller /
+lower-base-rate group, and the sign reverses when it falls on the larger / higher-base-rate
+group.**
+
+**Implications.** (a) A major upgrade over "does not generalize": the reversal is a controlled,
+reproducible consequence of group structure (consistent with #6's not-an-artifact finding).
+(b) It is **benign for the gate** — the gate fires on $|D_{\max}|$ regardless of sign, so
+detection is unaffected; what is structure-dependent is the *direction* of downstream EO harm,
+which matters for interpretation, not for flagging. (c) Task 2's third dataset is exactly what is
+needed to disentangle the three confounded scalars.
+
+**Honesty.** Cannot isolate which of the three confounded scalars is causal from two datasets;
+stated as such. Repro: `python experiment/why_compas.py` (~3 min).
 
 ### 2026-07-01 — Paper assembly (acmart draft)  (branch `feat/paper-assembly`)
 
