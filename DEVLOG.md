@@ -22,9 +22,12 @@ fairness metric.
 
 ## Current state (2026-06-30)
 
-- **Benchmark: built and reproducible, two datasets.** `python experiment/run_all.py
-  [--dataset adult|compas|all]` regenerates every table and figure from public data, fixed
+- **Benchmark: built and reproducible, three datasets.** `python experiment/run_all.py
+  [--dataset adult|compas|german|all]` regenerates every table and figure from public data, fixed
   seeds. Outputs under `results/{tables,figures}/<dataset>/`.
+- **Generalization map (3 datasets):** Adult r=+0.40 (excess on minority), COMPAS r=−0.31 (excess
+  on majority), German r≈0 (null — noise-dominated at n=1000). Two axes: SIGN←group structure
+  (Task 1), DETECTABILITY←sample size (Task 2). See `results/tables/boundary_check.csv`.
 - **Statistic locked:** `D_max` (max across features of the per-feature group missingness-rate
   gap). `mean`, `weighted`, and `mi_weighted` exist as secondary aggregations for comparison.
 - **Adult (primary, 450 cells):** `D_max` predicts the baseline-corrected EO gap at Pearson
@@ -75,9 +78,12 @@ src/pipeline/integrations.py  framework adapters: great_expectations_gate (runna
                             interface code. Same compose pattern on each framework's null-rate.
 experiment/benchmark/       load_adult.py: Adult via OpenML; sex as protected group.
                             load_compas.py: ProPublica COMPAS via URL + standard filter; race
-                            (Caucasian vs African-American) as protected group. Both dropna to
-                            complete data, one-hot cats, return (X, y, group, cont_cols, mar_driver);
-                            cached CSV (gitignored).
+                            (Caucasian vs African-American) as protected group.
+                            load_german.py: OpenML credit-g (1000 rows); age (>25) as protected
+                            group. All dropna to complete data, one-hot cats, return
+                            (X, y, group, cont_cols, mar_driver); cached CSV (gitignored).
+experiment/boundary_check.py  places all 3 datasets vs Task 1's sign rule ->
+                            results/tables/boundary_check.csv.
 experiment/configs/grid.py  SEEDS, MECHANISMS, GROUP_GAPS, BASE_RATES, DEMO_CELL.
 experiment/sweep.py         run_grid(): product of the grid through run_cell.
 experiment/analyze.py       add_baseline_delta(), scatter, detector AUROC, regime table,
@@ -146,6 +152,41 @@ Key takeaways for the paper:
 
 *Convention: add a detailed entry here after every feature — what was built, how, why, the
 result, threats to validity, and follow-ups.*
+
+### 2026-07-01 — Task 2: third dataset (German Credit) — a detectability axis  (branch `feat/third-dataset`)
+
+**What was done.** `experiment/benchmark/load_german.py` (OpenML `credit-g`, 1000 rows; protected =
+age, older = privileged, threshold 25; 5 numeric inject columns; y = good credit) wired into
+`run_all.py --dataset {…, german, all}`. Ran the full 450-cell grid.
+`experiment/boundary_check.py` places all three datasets against Task 1's sign rule →
+`results/tables/boundary_check.csv`.
+
+**Prediction (from Task 1).** German is structurally **Adult-like** — the unprivileged group
+(young, ≤25) is a **minority (19%)** with a **lower** good-credit base rate (baserate-diff −0.15,
+corr +0.13) — so the minority sign-rule predicted **positive r**.
+
+**Result — NULL, not positive.** German pooled **r = −0.02**; per-mechanism all ≈0; detector AUROC
+still modest (0.69–0.80). The tell: mean $|\Delta\mathrm{EO}|$ = **0.020**, *larger* than Adult's
+0.010 — so the effect is not small, it is **noise-dominated**. At n=1000 (test ~300) the EO-gap
+estimate fluctuates more than the injected disparity moves it, dissolving the linear relationship
+(consistent with #6's COMPAS noise-floor finding).
+
+**Synthesis — the boundary condition has two axes:**
+1. **SIGN ← group structure** (which group carries the excess missingness): established decisively
+   by Task 1's encoding-flip test on Adult + COMPAS. German does **not** contradict it (null, not
+   opposite-sign).
+2. **DETECTABILITY ← sample size**: German (n=1000) is below where a clean linear signal rises
+   above EO-estimate noise; Adult (45k) is well above; COMPAS (5.3k) is between (signal present,
+   noisier).
+
+Three datasets = 1 clear positive (Adult +0.40), 1 clear negative (COMPAS −0.31), 1 null
+(German ≈0) — a richer, more honest generalization map than "2 of 3."
+
+**Honesty.** German's three structural scalars still co-vary (minority + negative baserate-diff +
+positive corr, like Adult), so it does **not** disambiguate which scalar drives the sign — that
+stays open (needs a dataset where they diverge). What German adds is the orthogonal
+detectability/sample-size axis. Repro: `python experiment/run_all.py --dataset german` +
+`python experiment/boundary_check.py`.
 
 ### 2026-07-01 — Task 1: WHY the COMPAS reversal (a boundary condition)  (branch `analysis/compas-why`)
 

@@ -1,0 +1,4 @@
+target,threshold,positives,n,auroc
+eo_gap_delta,0.02,78,450,0.6909119106699751
+eo_gap_delta,0.05,24,450,0.7009976525821597
+eo_gap_delta,0.1,3,450,0.803131991051454

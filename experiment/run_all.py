@@ -25,9 +25,10 @@ from experiment.analyze import (  # noqa: E402
 )
 from experiment.benchmark.load_adult import load_adult  # noqa: E402
 from experiment.benchmark.load_compas import load_compas  # noqa: E402
+from experiment.benchmark.load_german import load_german  # noqa: E402
 from experiment.sweep import run_grid  # noqa: E402
 
-LOADERS = {"adult": load_adult, "compas": load_compas}
+LOADERS = {"adult": load_adult, "compas": load_compas, "german": load_german}
 
 PRIMARY_TARGET = "eo_gap_delta"
 SECONDARY_TARGET = "eo_gap"
@@ -76,9 +77,9 @@ def run_dataset(dataset):
 
 def main():
     ap = argparse.ArgumentParser()
-    ap.add_argument("--dataset", choices=["adult", "compas", "all"], default="adult")
+    ap.add_argument("--dataset", choices=["adult", "compas", "german", "all"], default="adult")
     args = ap.parse_args()
-    datasets = ["adult", "compas"] if args.dataset == "all" else [args.dataset]
+    datasets = ["adult", "compas", "german"] if args.dataset == "all" else [args.dataset]
     for d in datasets:
         print(f"\n========== {d.upper()} ==========")
         run_dataset(d)

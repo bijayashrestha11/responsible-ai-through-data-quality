@@ -1,0 +1,5 @@
+statistic,target,pearson_r,spearman_r
+statistic_max,eo_gap_delta,-0.016858713555377977,-0.031222503892181702
+statistic_mean,eo_gap_delta,0.004026916857596012,-0.04662396017157391
+statistic_weighted,eo_gap_delta,-0.00927826585610242,-0.04780094102922296
+statistic_mi,eo_gap_delta,0.018860903043788013,-0.020254577680888064
