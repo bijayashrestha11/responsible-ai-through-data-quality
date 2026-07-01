@@ -159,6 +159,33 @@ Key takeaways for the paper:
 *Convention: add a detailed entry here after every feature — what was built, how, why, the
 result, threats to validity, and follow-ups.*
 
+### 2026-07-01 — Task 9: finishing pass on the paper (P1–P4, text only)  (branch `feat/paper-finishing`)
+
+Reviewer-facing polish; no experiments, no scope change; L1 skipped (lit-gaps #27 done).
+- **P1 — causal caveat hardened.** Audited every sign-rule mention (abstract / intro / Results-COMPAS
+  / Discussion): all already frame the sign as tracking a *bundle* of co-varying properties with an
+  explicit "cannot isolate" (the only `because` in the file is the unrelated MAR sentence).
+  Rewrote the Discussion future-work into a **concrete falsifiable proposal** — a large-sample
+  dataset where the disadvantaged group is the *majority* yet has the *lower* base rate (minority
+  status and base-rate direction dissociate) would break the confound and identify the causal
+  property; added an explicit "we do not claim any one of them as the identified cause."
+- **P2 — effect-size honesty.** Added one Gate-section sentence: at the operating point, precision
+  $0.26$ means $\sim$3 in 4 flagged batches would not have produced meaningful EO harm → a triage
+  signal for human review, not an automated block (numbers verbatim from `threshold.csv`).
+- **P3 — softened "neglected".** Intro reworded: missing data is "now an active fairness concern"
+  but "remains under-addressed from an upstream, pipeline-detection standpoint" (truer, points at
+  the gap; `martinezplumed2021` still supports it). Related-work keeps "neglected dimension" as
+  Martínez-Plumed's own attributed claim.
+- **P4 — MDLA hedge + re-verify.** Re-verified **2026-07-01**: still v1 preprint, no journal
+  version, no automated gate/predictive threshold (S2 venue=medRxiv/journal=null; Europe PMC 0
+  hits; DOI→medRxiv). Reworded closest-competitors to lean on the two **durable** differentiators
+  (automated pipeline gate + calibrated predictive threshold with benchmark evidence), explicit
+  they hold even if MDLA is later automated, and "we do not claim primacy of the idea; we claim the
+  predictive-validity evidence." Intro framing reframed to foreground our predictive-validity
+  benchmark as the standing contribution.
+
+Consistency: 23 cites ↔ 23 bib; braces balanced. Author owns final voice.
+
 ### 2026-07-01 — Task 8: fill foundational literature gaps  (branch `feat/literature-gaps`)
 
 **What was done.** Verified (2 parallel agents, strict fetch-and-quote) and added **7 foundational
