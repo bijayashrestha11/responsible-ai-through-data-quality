@@ -1,0 +1,4 @@
+dataset,unpriv_frac,unpriv_is_minority,baserate_diff_unpriv_minus_priv,corr_group_target,mean_abs_delta_eo,pooled_r,predicted_sign,outcome
+adult,0.325,True,-0.1989,0.2158,0.0099,0.3978,+ (minority rule),matches minority rule
+compas,0.602,False,0.1323,-0.1297,0.0272,-0.3107,- (majority rule),matches minority rule
+german,0.19,True,-0.1494,0.1279,0.0196,-0.0169,+ (minority rule),NULL (no usable effect)

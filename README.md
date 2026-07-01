@@ -20,8 +20,9 @@ holds and where it fails.
 python3 -m venv .venv
 .venv/bin/pip install -r requirements.txt
 .venv/bin/python experiment/run_all.py                  # Adult (default)
-.venv/bin/python experiment/run_all.py --dataset compas # COMPAS confirmatory arm
-.venv/bin/python experiment/run_all.py --dataset all    # both
+.venv/bin/python experiment/run_all.py --dataset compas # COMPAS
+.venv/bin/python experiment/run_all.py --dataset german # German Credit
+.venv/bin/python experiment/run_all.py --dataset all    # all three
 ```
 
 The first run fetches **Adult** (Census Income, via OpenML) and **COMPAS** (ProPublica
@@ -120,6 +121,7 @@ src/
 experiment/
   benchmark/load_adult.py  # Adult loader (public, cached)
   benchmark/load_compas.py # COMPAS loader (ProPublica, public, cached)
+  benchmark/load_german.py # German Credit loader (OpenML, public, cached)
   configs/grid.py          # grid + seed definitions
   sweep.py                 # run the full grid
   analyze.py               # scatter, detector AUROC, regime + aggregation comparison
