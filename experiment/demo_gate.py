@@ -23,6 +23,10 @@ from experiment.benchmark.load_compas import load_compas  # noqa: E402
 from src.missingness.inject import inject_missingness  # noqa: E402
 from src.pipeline.gate import MissingnessDisparityGate  # noqa: E402
 
+# Benchmark-derived: the F1-optimal D_max cutoff on Adult (harm = EO-gap increase > 0.02) is
+# 0.103 — see experiment/derive_threshold.py and results/tables/adult/threshold.csv. We use the
+# rounded 0.10. It is a HIGH-RECALL screen (recall 0.72, precision 0.26): a sensitive early
+# warning that flags data for review, not a precise oracle. Adult-calibrated; regime-dependent.
 THRESHOLD = 0.10  # fail if D_max (worst-feature group missingness-rate gap) exceeds this
 
 
