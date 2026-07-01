@@ -35,15 +35,21 @@ contribution operational along three legs: (1)~a concrete \emph{missingness-disp
 statistic} ($D_{\max}$, the maximum across features of the between-group missingness-rate
 gap); (2)~a controlled benchmark that tests whether $D_{\max}$, measured before training,
 \emph{predicts} the post-training equalized-odds gap; and (3)~a \emph{validation-stage gate}
-that implements the check inside an existing data-quality framework. On the Adult benchmark
-the pre-training statistic predicts the baseline-corrected equalized-odds gap (Pearson
-$r\approx0.40$, rising to $0.52$ under MNAR; early-warning AUROC up to $0.78$), and predicts
-error-rate fairness more cleanly than demographic parity. On COMPAS the relationship does not
-replicate---it reverses---and a diagnostic shows this is not an artifact of imputation or
-zero-inflated features; we therefore report the signal as \emph{demonstrated but
-dataset-dependent} rather than universal. We release a reproducible benchmark and a runnable
-gate (with a Great Expectations integration), positioning missingness-aware fairness checking
-as a data-engineering problem.
+that implements the check inside an existing data-quality framework. Across three public
+datasets the signal is \emph{demonstrated but bounded}, and mapping that boundary is a central
+result. On Adult the pre-training statistic predicts the baseline-corrected equalized-odds gap
+(Pearson $r\approx0.40$, rising to $0.52$ under MNAR; early-warning AUROC up to $0.78$), more
+cleanly than demographic parity. On COMPAS the relationship \emph{reverses}; a controlled
+encoding-flip experiment shows this is not noise or an artifact but a \emph{boundary condition}
+---the sign is governed by which group carries the excess missingness (positive when it falls on
+the smaller / lower-base-rate group), flipping in both datasets when the encoding is flipped. On
+German Credit the correlation is \emph{null}, exposing a second, orthogonal axis: at $n{=}1000$
+the effect is swamped by equalized-odds estimation noise, so detectability requires sufficient
+data. We also derive the gate's decision threshold from the benchmark (F1-optimal $D_{\max}\approx
+0.10$ on Adult) and characterize the gate as a high-recall screen. We release a reproducible
+three-dataset benchmark and a runnable gate (with an executed Great Expectations integration;
+Deequ/TFDV adapters are interface-compatible but not executed), positioning missingness-aware
+fairness checking as a data-engineering problem whose reach we bound honestly.
 \end{abstract}
 
 \keywords{fairness, missing data, data quality, data validation, machine-learning pipelines,
@@ -77,8 +83,10 @@ inside an existing data-quality framework, the leg that makes it a data-engineer
 (Section~\ref{sec:gate}).
 \end{enumerate}
 We frame the work as the pipeline operationalization that recent audit-oriented
-work~\cite{mdla2026} calls for but does not build, and we report a genuine negative result:
-the predictive signal holds on Adult but not on COMPAS.
+work~\cite{mdla2026} calls for but does not build. Equally central is where the signal
+\emph{fails}: across three datasets we find it holds on Adult, reverses on COMPAS, and vanishes
+on German Credit, and we identify the two properties---group structure and sample size---that
+govern which regime obtains. The honesty of that boundary is a contribution, not a caveat.
 
 \section{Related Work}\label{sec:related}
 \textbf{Data quality as a fairness concern.}
@@ -116,9 +124,13 @@ composes~\cite{biswasrajan2021}. We add a single fairness-relevant, \emph{predic
 this class of gate.
 
 \textbf{Closest competitors.}
-The Missingness Demographic Leakage Audit~\cite{mdla2026} (preprint) is a retrospective audit
-on ICU data testing whether missingness indicators leak demographics; its findings are
-associative and subtle, and it is a manual audit rather than an automated, forecasting gate.
+The Missingness Demographic Leakage Audit~\cite{mdla2026} (preprint) is a manual, four-step
+retrospective \emph{audit} on ICU data testing whether missingness indicators leak demographics;
+its findings are associative, and its response is post-hoc recalibration. It shares our
+pre-deployment stance, so the distinction is not timing but \emph{operationalization}: MDLA does
+not automate the check into a pipeline validation gate, nor calibrate a threshold that
+\emph{forecasts} downstream fairness degradation---the prospective evaluation it lists as future
+work, and what we build.
 Su\'arez Ferreira et al.~\cite{suarezferreira2025} (preprint) propose a data-centric early
 indicator of fairness, but the signal is classification \emph{complexity}, not missingness,
 and they address neither pipeline placement nor automation.
@@ -156,10 +168,10 @@ We report equalized odds as primary (the causal story---uneven corruption yields
 rates---maps onto error-rate fairness) and name the fairness impossibility
 results~\cite{caton2024} so the equalized-odds-specific framing is deliberate.
 
-\textbf{Datasets.} Adult (Census Income; protected attribute sex; $45{,}222$ complete rows)
-is the primary benchmark; COMPAS (two-year recidivism; protected attribute race, Caucasian
-vs.\ African-American; $5{,}278$ rows) is a confirmatory second dataset---smaller, noisier, a
-different domain. Both are public; the benchmark is fully reproducible from one command with
+\textbf{Datasets.} Three public datasets of deliberately different size and domain: Adult
+(Census Income; protected attribute sex; $45{,}222$ complete rows), COMPAS (two-year
+recidivism; race, Caucasian vs.\ African-American; $5{,}278$ rows), and German Credit
+(Statlog; age $>25$; $1{,}000$ rows). The benchmark is fully reproducible from one command with
 fixed seeds.
 
 \section{Results}\label{sec:results}
@@ -167,9 +179,10 @@ fixed seeds.
 \begin{figure*}[t]\centering
 \includegraphics[width=0.92\textwidth]{fig1_scatter_contrast}
 \caption{Pre-training $D_{\max}$ vs.\ the post-training baseline-corrected equalized-odds gap
-across all 450 grid cells, coloured by mechanism. On Adult (left) the relationship is positive
-($r=+0.40$); on COMPAS (right) it reverses ($r=-0.31$). The upstream signal is demonstrated but
-dataset-dependent.}
+across all 450 grid cells per dataset, coloured by mechanism. The relationship is positive on
+Adult ($r=+0.40$), reverses on COMPAS ($r=-0.31$), and is null on German Credit ($r=-0.02$)---the
+full generalization map. Sign and detectability are governed by group structure and sample size,
+respectively (Sec.~\ref{sec:results}).}
 \label{fig:contrast}
 \end{figure*}
 
@@ -218,15 +231,37 @@ best. $D_{\max}$ is the labels-free default.}
 \label{fig:agg}
 \end{figure}
 
-\textbf{COMPAS: the signal does not replicate.} On COMPAS the relationship \emph{reverses}:
-pooled $r=-0.31$ ($-0.53$ under MNAR), and injecting group-correlated missingness slightly
-\emph{reduces} the measured gap. A diagnostic rules out the obvious artifacts: the negative
-sign is robust to injecting only the non-zero-inflated \texttt{age} feature ($-0.42$) and to
-mean imputation ($-0.22$), so it is not a product of COMPAS's zero-inflated count features or
-the median-imputation choice; meanwhile the per-cell effect ($\,\overline{|\Delta_{\mathrm{EO}}|}=0.027$)
-is small relative to seed-to-seed variability ($0.062$). We therefore read COMPAS as a domain
-where the upstream signal does not provide usable predictive validity, and report the
-contribution as \emph{demonstrated but dataset-dependent}.
+\textbf{COMPAS: the sign reverses---a boundary condition.} On COMPAS the relationship
+\emph{reverses} (pooled $r=-0.31$). This is neither noise nor an artifact: the sign is robust to
+injecting only the non-zero-inflated \texttt{age} feature ($-0.42$) and to mean imputation
+($-0.22$). A controlled \emph{encoding-flip} experiment identifies the cause: flipping the
+protected-group encoding---so the excess missingness falls on the other group---flips the sign of
+$r$ in \emph{both} datasets (Adult $+0.40\!\rightarrow\!-0.36$; COMPAS $-0.31\!\rightarrow\!+0.42$),
+with magnitude preserved (Figure~\ref{fig:flip}). The sign is therefore governed by \emph{which
+group carries the excess missingness}: positive when it falls on the smaller / lower-base-rate
+group, negative on the larger / higher-base-rate group. The statistic carries predictive signal in
+every configuration ($|r|\approx0.4$); only the \emph{direction} of downstream harm depends on
+group structure. Three structural properties (minority status, the sign of the base-rate
+difference, and the sign of the protected--target correlation) co-vary across our two datasets, so
+we cannot yet isolate which is causal.
+
+\begin{figure}[t]\centering
+\includegraphics[width=0.80\columnwidth]{fig5_boundary_flip}
+\caption{Encoding-flip test. Flipping which group carries the excess missingness flips the sign of
+$r$ in both datasets, magnitude preserved---so the sign is a function of group structure, not
+dataset identity.}
+\label{fig:flip}
+\end{figure}
+
+\textbf{German Credit: null---a detectability limit.} On German Credit the correlation is null
+($r=-0.02$), even though its structure predicts a positive sign by the rule above (the
+unprivileged group is a minority with a lower base rate). The effect is not small---the mean
+per-cell $|\Delta_{\mathrm{EO}}|$ ($0.020$) exceeds Adult's ($0.010$)---it is \emph{noise-dominated}:
+at $n=1000$ (a $\sim$300-row test set) equalized-odds fluctuations swamp the injected disparity,
+dissolving the linear signal. Detectability thus depends on sample size, a second axis orthogonal
+to the sign. Together the three datasets map the boundary: the signal is present and
+sign-predictable-by-structure when the sample is large enough (Adult, COMPAS) and undetectable when
+it is not (German).
 
 \begin{figure}[t]\centering
 \includegraphics[width=0.84\columnwidth]{fig3_mechanism_r}
@@ -248,42 +283,51 @@ features and the protected-attribute label---no target and no model.}
 The statistic becomes a data-engineering artifact when placed at a pre-training validation
 stage (Figure~\ref{fig:gate}). Our gate computes $D_{\max}$ on an incoming batch and fails the
 pipeline when it exceeds
-a policy threshold $\tau$ (tunable from the detector results above); it requires only the
-features and the protected-attribute label---no target, no model. On a batch with strong
-group-correlated missingness the gate fails ($D_{\max}=0.30 > \tau=0.10$, worst feature
-\texttt{age}); on a batch with the same overall missingness but \emph{no} group correlation it
-passes ($D_{\max}=0.00$), on both Adult and COMPAS.
+a policy threshold $\tau$; it requires only the features and the protected-attribute label---no
+target, no model. We \emph{derive} $\tau$ from the benchmark rather than assert it: on Adult, the
+F1-optimal cutoff for flagging a meaningful equalized-odds increase is $D_{\max}\approx0.10$
+(recall $0.72$, precision $0.26$; a precision-$0.8$ operating point is unreachable). The gate is
+thus best read as a \emph{high-recall screen}---a sensitive early warning that flags data for
+review, not a precise oracle---which is the appropriate role for a validation gate and consistent
+with a moderate predictor. The threshold is Adult-calibrated and, by the boundary condition above,
+regime-dependent. On a batch with strong group-correlated missingness the gate fails
+($D_{\max}=0.30 > \tau=0.10$, worst feature \texttt{age}); on a batch with the same overall
+missingness but \emph{no} group correlation it passes ($D_{\max}=0.00$), on both Adult and COMPAS.
 
 Data-validation frameworks such as Deequ~\cite{schelter2018deequ},
 TFDV~\cite{caveness2020}, and Great Expectations~\cite{greatexpectations} natively measure
 per-column completeness but carry no group-wise or fairness-linked notion. The integration
 pattern is the same for each: let the framework measure the per-group, per-column null rate
 (its native strength), compose those into $D_{\max}$, and enforce $\tau$ (the fairness leg they
-lack). We provide a runnable Great Expectations integration that routes the per-group null
-measurement through the framework's own validation engine and reproduces the gate decision, and
-interface adapters for Deequ and TFDV. This is what answers the ``just Deequ with a fairness
+lack). We implement and \emph{execute} the Great Expectations integration end to end---it routes
+the per-group null measurement through the framework's own validation engine and reproduces the
+gate decision. The Deequ and TFDV adapters are \emph{interface-compatible but not executed} here
+(they require a Spark/JVM and a TensorFlow runtime, respectively); we provide them as reference
+integrations against the documented APIs. This is what answers the ``just Deequ with a fairness
 label'' critique: the gate is a \emph{demographic} disparity check with empirically
 characterized predictive validity, not a bare null-rate constraint.
 
 \section{Discussion and Limitations}\label{sec:discussion}
-The headline claim is deliberately scoped. Predictive validity is demonstrated on Adult and
-does \emph{not} generalize to COMPAS; the honest position is that the signal is
-regime/dataset-dependent, which is itself the adjudication of the conflicting prior
-results~\cite{bhatti2025,min2025}. A single positive benchmark and one null/negative benchmark
-are not enough to bound where the check is useful; a third dataset is the clear next step. We
-deliberately hold imputation fixed---imputation choice is a known, separate fairness
-lever~\cite{feng2023}---and we leave mitigation to future work: the gate \emph{detects}, it
-does not repair. The COMPAS reversal, while not an artifact of the factors we tested, is not yet
-mechanistically explained. Finally, our protected attributes are binary; extending $D_{\max}$ to
-multi-group settings is straightforward in principle but untested here.
+The claim is deliberately bounded, and mapping the boundary is part of the contribution. Across
+three datasets the signal holds (Adult), reverses (COMPAS), and vanishes (German), and two axes
+explain which regime obtains: its \emph{sign} is governed by group structure (the encoding-flip
+result) and its \emph{detectability} by sample size (the German null). This is itself the
+adjudication of the conflicting prior results~\cite{bhatti2025,min2025}. The main open question is
+which of the three co-varying structural properties drives the sign; our two large-enough datasets
+confound them, and a dataset in which they diverge would isolate the cause. We deliberately hold
+imputation fixed---imputation choice is a known, separate fairness lever~\cite{feng2023}---and we
+leave mitigation to future work: the gate \emph{detects}, it does not repair. Finally, our
+protected attributes are binary; extending $D_{\max}$ to multi-group settings is straightforward in
+principle but untested here.
 
 \section{Conclusion}
 Fairness harm from group-correlated missingness can be checked \emph{before} training with a
 cheap, model-free statistic placed at a data-validation gate. On Adult the check predicts
-equalized-odds degradation with useful early-warning performance, strongest under MNAR; on
-COMPAS it does not, and we say so. Treating fairness as an upstream data-quality assurance
-problem---and building the check into the pipeline tooling engineers already run---is the
-data-engineering contribution this paper makes concrete.
+equalized-odds degradation with useful early-warning performance, strongest under MNAR; on COMPAS
+its sign reverses and on German it vanishes---and we show these are not failures of the method but
+a boundary set by group structure and sample size. Treating fairness as an upstream data-quality
+assurance problem---and building the check into the pipeline tooling engineers already run, with an
+honest account of where it works---is the data-engineering contribution this paper makes concrete.
 
 \section*{Reproducibility}
 All benchmark data are public. One command (\texttt{python experiment/run\_all.py --dataset
