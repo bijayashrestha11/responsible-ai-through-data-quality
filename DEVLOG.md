@@ -26,8 +26,10 @@ fairness metric.
   [--dataset adult|compas|german|all]` regenerates every table and figure from public data, fixed
   seeds. Outputs under `results/{tables,figures}/<dataset>/`.
 - **Generalization map (3 datasets):** Adult r=+0.40 (excess on minority), COMPAS r=−0.31 (excess
-  on majority), German r≈0 (null — noise-dominated at n=1000). Two axes: SIGN←group structure
-  (Task 1), DETECTABILITY←sample size (Task 2). See `results/tables/boundary_check.csv`.
+  on majority), German r≈0 (null). Two axes: SIGN←group structure (Task 1, encoding-flip),
+  DETECTABILITY←sample size (Task 2 + **Task 5: controlled** — Adult subsampled to n=1000 → r≈0.007,
+  reproducing German's null with all else fixed; r rises monotonically to 0.40 at full n). See
+  `results/tables/boundary_check.csv`, `results/tables/adult/subsample.csv`.
 - **Statistic locked:** `D_max` (max across features of the per-feature group missingness-rate
   gap). `mean`, `weighted`, and `mi_weighted` exist as secondary aggregations for comparison.
 - **Adult (primary, 450 cells):** `D_max` predicts the baseline-corrected EO gap at Pearson
@@ -86,6 +88,8 @@ experiment/boundary_check.py  places all 3 datasets vs Task 1's sign rule ->
                             results/tables/boundary_check.csv.
 experiment/derive_threshold.py  derives the gate D_max threshold (max-F1, precision-target) from
                             the Adult detector data -> results/tables/adult/threshold.csv.
+experiment/subsample_adult.py  tests detectability<-sample-size within Adult (full grid at several
+                            n) -> results/tables/adult/subsample.csv.
 experiment/configs/grid.py  SEEDS, MECHANISMS, GROUP_GAPS, BASE_RATES, DEMO_CELL.
 experiment/sweep.py         run_grid(): product of the grid through run_cell.
 experiment/analyze.py       add_baseline_delta(), scatter, detector AUROC, regime table,
@@ -154,6 +158,30 @@ Key takeaways for the paper:
 
 *Convention: add a detailed entry here after every feature — what was built, how, why, the
 result, threats to validity, and follow-ups.*
+
+### 2026-07-01 — Task 5: detectability axis, tested within Adult  (branch `analysis/detectability-subsample`)
+
+**Question.** Is "detectability ← sample size" real, or is German's null confounded with its other
+differences (feature count, base rate, domain)?
+
+**What was done.** `experiment/subsample_adult.py`: re-run the full 450-cell grid on stratified
+`(group,y)` subsamples of Adult at n ∈ {1000, 2000, 5000, 10000, 20000, full}, subsampling BEFORE
+the split, everything else byte-identical. → `results/tables/adult/subsample.csv`. Added
+`fig6_subsample` (r vs n) to `make_figures.py`.
+
+**Result — supported, under control.** Pooled r rises monotonically with n while the effect
+magnitude persists: n=1000 → **+0.007** (mean|ΔEO|=0.024); 5000 → +0.050; 10000 → +0.140; 20000 →
++0.328; full (45 222) → **+0.398** (mean|ΔEO|=0.010). **Adult-at-1000 (r≈0.007) is indistinguishable
+from German's null (r≈−0.02)** — with features, base rate, and domain all held fixed. So sample
+size alone reproduces the null. The noise-floor mechanism is confirmed: |ΔEO| stays ~0.01–0.02
+(larger at small n) while the correlation collapses.
+
+**Falsifiability.** Designed to be able to refute the axis (r staying strong at small n would have
+done so); it did not. The full r-vs-n curve is reported, not just the endpoints.
+
+**Implication.** The detectability axis is now a controlled result, not a one-point assertion; the
+German null is reframed as "Adult shrunk to n=1000 behaves the same." Task 7 folds the curve
+(`fig6_subsample`) into the paper. Repro: `python experiment/subsample_adult.py` (~5 min).
 
 ### 2026-07-01 — Task 4: paper hardening + submission-prep  (branch `feat/paper-hardening`)
 
