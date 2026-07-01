@@ -44,7 +44,8 @@ encoding-flip experiment shows this is not noise or an artifact but a \emph{boun
 ---the sign is governed by which group carries the excess missingness (positive when it falls on
 the smaller / lower-base-rate group), flipping in both datasets when the encoding is flipped. On
 German Credit the correlation is \emph{null}, exposing a second, orthogonal axis: at $n{=}1000$
-the effect is swamped by equalized-odds estimation noise, so detectability requires sufficient
+the effect is swamped by equalized-odds estimation noise---subsampling Adult reproduces this null
+with all else fixed, isolating sample size as the cause---so detectability requires sufficient
 data. We also derive the gate's decision threshold from the benchmark (F1-optimal $D_{\max}\approx
 0.10$ on Adult) and characterize the gate as a high-recall screen. We release a reproducible
 three-dataset benchmark and a runnable gate (with an executed Great Expectations integration;
@@ -258,10 +259,27 @@ dataset identity.}
 unprivileged group is a minority with a lower base rate). The effect is not small---the mean
 per-cell $|\Delta_{\mathrm{EO}}|$ ($0.020$) exceeds Adult's ($0.010$)---it is \emph{noise-dominated}:
 at $n=1000$ (a $\sim$300-row test set) equalized-odds fluctuations swamp the injected disparity,
-dissolving the linear signal. Detectability thus depends on sample size, a second axis orthogonal
-to the sign. Together the three datasets map the boundary: the signal is present and
-sign-predictable-by-structure when the sample is large enough (Adult, COMPAS) and undetectable when
-it is not (German).
+dissolving the linear signal. We confirm this is sample size, not a peculiarity of German, with a
+controlled test: subsampling \emph{Adult} to $n=1000$---holding features, base rate, and domain
+fixed---collapses its correlation to $r=0.007$, indistinguishable from German's null, and pooled
+$r$ then rises monotonically with $n$ to $0.40$ at full size (Figure~\ref{fig:subsample}).
+Detectability thus depends on sample size, a second axis orthogonal to the sign. Together the
+three datasets map the boundary: the signal is present and sign-predictable-by-structure when the
+sample is large enough (Adult, COMPAS) and undetectable when it is not (German).
+
+\begin{figure}[t]\centering
+\includegraphics[width=0.84\columnwidth]{fig6_subsample}
+\caption{Detectability grows with sample size. Re-running the full grid on stratified subsamples
+of Adult (all else fixed), pooled $r$ falls to German's null level at $n=1000$ and rises
+monotonically to $0.40$ at full size.}
+\label{fig:subsample}
+\end{figure}
+
+\textbf{Per-mechanism note.} On COMPAS the MAR signal is notably weaker ($r=-0.07$) than MCAR
+($-0.52$) and MNAR ($-0.53$). A probe rules out the obvious cause---its zero-inflated MAR driver
+(\texttt{priors\_count})---because Adult's MAR driver is in fact \emph{more} concentrated yet yields
+a strong MAR signal ($r=+0.44$); we therefore report this per-mechanism variation as unexplained
+rather than over-interpret it.
 
 \begin{figure}[t]\centering
 \includegraphics[width=0.84\columnwidth]{fig3_mechanism_r}
@@ -311,7 +329,8 @@ characterized predictive validity, not a bare null-rate constraint.
 The claim is deliberately bounded, and mapping the boundary is part of the contribution. Across
 three datasets the signal holds (Adult), reverses (COMPAS), and vanishes (German), and two axes
 explain which regime obtains: its \emph{sign} is governed by group structure (the encoding-flip
-result) and its \emph{detectability} by sample size (the German null). This is itself the
+result) and its \emph{detectability} by sample size (the German null, reproduced by subsampling
+Adult with all else fixed). This is itself the
 adjudication of the conflicting prior results~\cite{bhatti2025,min2025}. The main open question is
 which of the three co-varying structural properties drives the sign; our two large-enough datasets
 confound them, and a dataset in which they diverge would isolate the cause. We deliberately hold

@@ -159,6 +159,24 @@ Key takeaways for the paper:
 *Convention: add a detailed entry here after every feature — what was built, how, why, the
 result, threats to validity, and follow-ups.*
 
+### 2026-07-01 — Task 7: reporting-precision pass (round 2)  (branch `feat/paper-precision-2`)
+
+**What was done.** Round-2 precision pass on `main.tex`:
+- **Confirmed already present (round 1):** the precision-$\geq$0.8-unreachable statement is in
+  PROSE (no NaN table cell rendered); the three-scalar confound caveat + "a dataset where they
+  diverge would isolate the cause" future-work sentence; the MDLA differentiation on
+  operationalization (automated gate + predictive-validity threshold), not timing.
+- **Folded in Task 5:** the German paragraph now cites the controlled subsample result
+  (Adult@$n{=}1000 \to r=0.007$, rising monotonically to $0.40$) and embeds `fig6_subsample`;
+  abstract + discussion updated to note the controlled confirmation. The detectability axis is now
+  stated as a controlled result, not a one-point assertion.
+- **Folded in Task 6:** added a per-mechanism note that the weak COMPAS MAR ($r=-0.07$) is
+  **unexplained** (the zero-inflated-driver hypothesis was refuted).
+- 7 figures total; all labels/refs/targets/cites verified; braces balanced.
+
+**Author-owned (unchanged).** Argument/voice; author metadata filled (Bijaya Shrestha); AI-use
+disclosure present; first LaTeX compile still pending (no toolchain here).
+
 ### 2026-07-01 — Task 6: COMPAS MAR anomaly — flagged, not force-explained  (branch `analysis/compas-mar-anomaly`)
 
 **Question.** COMPAS regime: MCAR r=−0.52, MNAR r=−0.53 (strong) but **MAR r=−0.07** (flat). Is the
