@@ -91,10 +91,16 @@ govern which regime obtains. The honesty of that boundary is a contribution, not
 
 \section{Related Work}\label{sec:related}
 \textbf{Data quality as a fairness concern.}
-A recurring theme is that fairness harms originate in data. Mart\'inez-Plumed et
-al.~\cite{martinezplumed2021} argue missing values are a neglected dimension of fairness;
-surveys catalogue the standard group-fairness metrics and the impossibility results among
-them~\cite{caton2024}, context for our deliberate commitment to equalized odds.
+A recurring theme is that fairness harms originate in data. This data-first stance has a lineage:
+Sambasivan et al.~\cite{sambasivan2021} show upstream data problems compound into downstream
+``data cascades,'' and a strand of data documentation---datasheets~\cite{gebru2021datasheets},
+data cards~\cite{pushkarna2022datacards}---records a dataset's provenance and quality in prose. Our
+contribution sits at the quantitative, automated end of that spectrum: a machine-checkable
+disparity statistic enforced at a gate rather than prose documentation. Mart\'inez-Plumed et
+al.~\cite{martinezplumed2021} argue missing values are a neglected dimension of fairness. For the
+downstream side we adopt equalized odds~\cite{hardt2016} and name the impossibility
+result~\cite{chouldechova2017} that constrains it when group base rates differ; a
+survey~\cite{caton2024} gives the broader landscape.
 
 \textbf{Missingness and fairness.}
 The link is established. Goel et al.~\cite{goel2021} show via causal graphs that ignoring
@@ -153,9 +159,10 @@ model-free (no model is fit), preserving the ingestion-time property.
 \section{Predictive-Validity Benchmark}\label{sec:method}
 \textbf{Design.} Starting from (near-)complete public data, we \emph{inject} missingness so
 that the mechanism and group-correlation are known---the control real data cannot give. We
-vary three knobs: mechanism (MCAR / MAR / MNAR), between-group rate gap
-$\{0,0.05,0.10,0.20,0.30\}$, and overall rate $\{0.05,0.15,0.30\}$, with ten seeds, for $450$
-cells per dataset. Per cell we (1)~inject; (2)~compute $D_{\max}$ on the injected training data
+vary three knobs: mechanism---missing completely at random, at random, or not at random
+(MCAR / MAR / MNAR), the standard taxonomy of Rubin~\cite{rubin1976,littlerubin}---between-group
+rate gap $\{0,0.05,0.10,0.20,0.30\}$, and overall rate $\{0.05,0.15,0.30\}$, with ten seeds, for
+$450$ cells per dataset. Per cell we (1)~inject; (2)~compute $D_{\max}$ on the injected training data
 (the upstream check); (3)~impute with a fixed strategy (median) held constant so imputation is
 not a confound; (4)~train a fixed logistic-regression model; and (5)~measure the
 equalized-odds gap (primary) and demographic-parity gap (secondary) on a held-out test set.
@@ -165,9 +172,10 @@ primary target is the \emph{baseline-corrected} equalized-odds gap, $\Delta_{\ma
 the cell's gap minus that of its matching no-disparity cell (same mechanism, rate, seed, with
 zero rate gap). This isolates the contribution of group-correlated missingness from both the
 dataset's baseline unfairness and from missingness that is present but not group-correlated.
-We report equalized odds as primary (the causal story---uneven corruption yields uneven error
-rates---maps onto error-rate fairness) and name the fairness impossibility
-results~\cite{caton2024} so the equalized-odds-specific framing is deliberate.
+We report equalized odds~\cite{hardt2016} as primary (the causal story---uneven corruption yields
+uneven error rates---maps onto error-rate fairness) and name the impossibility
+result~\cite{chouldechova2017}---calibration and error-rate balance cannot both hold when group
+base rates differ---so the equalized-odds-specific framing is deliberate.
 
 \textbf{Datasets.} Three public datasets of deliberately different size and domain: Adult
 (Census Income; protected attribute sex; $45{,}222$ complete rows), COMPAS (two-year
