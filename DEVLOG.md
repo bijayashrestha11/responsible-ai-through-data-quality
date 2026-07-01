@@ -84,6 +84,8 @@ experiment/benchmark/       load_adult.py: Adult via OpenML; sex as protected gr
                             (X, y, group, cont_cols, mar_driver); cached CSV (gitignored).
 experiment/boundary_check.py  places all 3 datasets vs Task 1's sign rule ->
                             results/tables/boundary_check.csv.
+experiment/derive_threshold.py  derives the gate D_max threshold (max-F1, precision-target) from
+                            the Adult detector data -> results/tables/adult/threshold.csv.
 experiment/configs/grid.py  SEEDS, MECHANISMS, GROUP_GAPS, BASE_RATES, DEMO_CELL.
 experiment/sweep.py         run_grid(): product of the grid through run_cell.
 experiment/analyze.py       add_baseline_delta(), scatter, detector AUROC, regime table,
@@ -152,6 +154,29 @@ Key takeaways for the paper:
 
 *Convention: add a detailed entry here after every feature — what was built, how, why, the
 result, threats to validity, and follow-ups.*
+
+### 2026-07-01 — Task 3: derive the gate threshold from the benchmark  (branch `feat/threshold-from-benchmark`)
+
+**What was done.** `experiment/derive_threshold.py`: treats "harm" as a baseline-corrected EO-gap
+increase above EO_TARGET, uses `D_max` as the score, and reports the threshold at two operating
+points — max-F1 and highest-recall-subject-to-precision≥0.8 — for EO_TARGET ∈ {0.02, 0.05} on
+Adult. → `results/tables/adult/threshold.csv`.
+
+**Result — closes the loop.** The F1-optimal `D_max` threshold (harm = EO increase > 0.02) is
+**0.103** — which *vindicates the round 0.10* the gate/demo already used (it was not arbitrary).
+Operating point: **recall 0.72, precision 0.26**. A precision≥0.8 point is **unreachable** with
+`D_max` alone.
+
+**Honest framing.** The gate is a **high-recall, low-precision screen** — a sensitive early
+warning that flags data for human review, not a precise oracle (as expected from a moderate
+predictor, r≈0.4). That is the appropriate role for a validation gate. The threshold is
+**Adult-calibrated and regime-dependent**: Task 1 (sign ← group structure) and Task 2 (detectability
+← sample size) mean it does not transfer unchanged to COMPAS (opposite sign) or German (null). The
+gate still *detects* the disparity via |D_max| everywhere; what varies is the mapping from D_max to
+EO-harm.
+
+**Updated.** `demo_gate.py` documents the 0.10 as the benchmark-derived (rounded F1-optimal) value
+with the recall/precision caveat. Repro: `python experiment/derive_threshold.py`.
 
 ### 2026-07-01 — Task 2: third dataset (German Credit) — a detectability axis  (branch `feat/third-dataset`)
 
