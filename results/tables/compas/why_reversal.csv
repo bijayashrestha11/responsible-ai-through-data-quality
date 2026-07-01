@@ -1,0 +1,5 @@
+config,unpriv_frac,unpriv_is_minority,size_ratio_unpriv_over_priv,base_rate_priv,base_rate_unpriv,baserate_diff_unpriv_minus_priv,corr_group_target,pooled_r
+adult  orig  (unpriv=Female),0.325,True,0.481,0.3125,0.1136,-0.1989,0.2158,0.3978
+adult  flip  (unpriv=Male),0.675,False,2.077,0.1136,0.3125,0.1989,-0.2158,-0.3611
+compas orig  (unpriv=African-American),0.602,False,1.51,0.3909,0.5231,0.1323,-0.1297,-0.3107
+compas flip  (unpriv=Caucasian),0.398,True,0.662,0.5231,0.3909,-0.1323,0.1297,0.4166
