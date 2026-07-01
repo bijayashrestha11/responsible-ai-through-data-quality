@@ -155,6 +155,30 @@ Key takeaways for the paper:
 *Convention: add a detailed entry here after every feature — what was built, how, why, the
 result, threats to validity, and follow-ups.*
 
+### 2026-07-01 — Task 4: paper hardening + submission-prep  (branch `feat/paper-hardening`)
+
+**What was done.** Folded Tasks 1–3 into `paper/main.tex`:
+- **Abstract + intro** rewritten to give the bounded/negative result **equal billing** — the
+  three-dataset map (Adult holds, COMPAS reverses, German null) and the two governing axes (sign ←
+  group structure; detectability ← sample size) are now front-and-centre, framed as a contribution.
+- **Datasets** → three; **Results** → boundary-condition (encoding-flip) paragraph + German
+  detectability paragraph; **Gate** → benchmark-derived threshold ($D_{\max}\approx0.10$,
+  high-recall screen) and the regime-dependence caveat.
+- **Figures** (`make_figures.py`): the headline scatter is now a **3-panel** Adult/COMPAS/German
+  contrast; added **fig5** (encoding-flip bars). 6 figures total, all labels/refs/targets verified.
+- **Tooling precision audit:** the paper now states GE is **executed** end-to-end and Deequ/TFDV
+  are **interface-compatible but not executed** (Spark/TF) — no sentence implies they were run.
+- **MDLA re-verified** (web, 2026-07-01): still preprint v1, no gate/predictor, no published
+  version. Sharpened the related-work framing per the finding — MDLA already claims a
+  pre-deployment posture, so the differentiator is **automation + a predictive threshold, not
+  timing**. Reworded the "closest competitors" paragraph accordingly.
+- Added `paper/SUBMISSION_CHECKLIST.md` (author metadata, arXiv endorsement, compile steps,
+  license, category).
+
+**Left to the author (per project rules).** The argument, final voice, and the
+author/affiliation/email placeholders; the first real LaTeX compile (no toolchain here — draft is
+structure-checked only).
+
 ### 2026-07-01 — Task 3: derive the gate threshold from the benchmark  (branch `feat/threshold-from-benchmark`)
 
 **What was done.** `experiment/derive_threshold.py`: treats "harm" as a baseline-corrected EO-gap

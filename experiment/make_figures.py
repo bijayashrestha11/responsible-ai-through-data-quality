@@ -68,13 +68,37 @@ def _scatter(ax, df, title):
     ax.set_ylabel(r"$\Delta$ equalized-odds gap")
 
 
-def fig_scatter_contrast(da, dc):
-    fig, axes = plt.subplots(1, 2, figsize=(6.8, 3.0))
-    _scatter(axes[0], da, "Adult: signal holds")
-    _scatter(axes[1], dc, "COMPAS: reverses")
+def fig_scatter_contrast(da, dc, dg):
+    fig, axes = plt.subplots(1, 3, figsize=(9.4, 3.0))
+    _scatter(axes[0], da, "Adult: holds (n=45k)")
+    _scatter(axes[1], dc, "COMPAS: reverses (n=5k)")
+    _scatter(axes[2], dg, "German: null (n=1k)")
+    for ax in axes[1:]:
+        ax.set_ylabel("")
     axes[0].legend(title="mechanism", fontsize=7)
     fig.tight_layout()
     save(fig, "fig1_scatter_contrast")
+
+
+def fig_boundary_flip():
+    """Task 1 encoding-flip result: the sign of r flips when the excess missingness moves to the
+    other group. Reads results/tables/compas/why_reversal.csv."""
+    df = pd.read_csv(os.path.join(_REPO, "results", "tables", "compas", "why_reversal.csv"))
+    labels = ["Adult\norig", "Adult\nflip", "COMPAS\norig", "COMPAS\nflip"]
+    r = df.pooled_r.to_numpy()
+    fig, ax = plt.subplots(figsize=(3.6, 2.9))
+    colors = ["#55A868" if v > 0 else "#C44E52" for v in r]
+    bars = ax.bar(range(len(r)), r, color=colors)
+    ax.axhline(0, color="k", lw=0.8)
+    ax.set_xticks(range(len(r)))
+    ax.set_xticklabels(labels, fontsize=7)
+    ax.set_ylabel(r"pooled $r$ ($D_{\max}$, $\Delta$EO)")
+    ax.set_title("Sign flips with the protected-group encoding")
+    for b, v in zip(bars, r):
+        ax.text(b.get_x() + b.get_width() / 2, v + (0.02 if v > 0 else -0.05),
+                f"{v:+.2f}", ha="center", fontsize=7)
+    fig.tight_layout()
+    save(fig, "fig5_boundary_flip")
 
 
 def fig_detector_roc(da):
@@ -158,13 +182,14 @@ def fig_gate_schematic():
 
 
 def main():
-    da, dc = load("adult"), load("compas")
+    da, dc, dg = load("adult"), load("compas"), load("german")
     fig_gate_schematic()
-    fig_scatter_contrast(da, dc)
+    fig_scatter_contrast(da, dc, dg)
     fig_detector_roc(da)
     fig_mechanism_r(da, dc)
     fig_aggregation(da)
-    print(f"Wrote 5 figures (PDF+PNG) to {os.path.relpath(OUT, _REPO)}/")
+    fig_boundary_flip()
+    print(f"Wrote 6 figures (PDF+PNG) to {os.path.relpath(OUT, _REPO)}/")
 
 
 if __name__ == "__main__":
