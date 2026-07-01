@@ -3,8 +3,8 @@
 The paper draft is complete but not yet submission-ready. These are the author-owned steps.
 
 ## Blockers (must do)
-- [ ] **Fill author metadata** in `main.tex`: `[Author Name]`, `[Affiliation — independent
-  researcher]`, `[email]`, and `\shortauthors`.
+- [x] **Fill author metadata** in `main.tex` — done: Bijaya Shrestha, Independent Researcher,
+  shrestha.bj2056@gmail.com (and `\shortauthors`).
 - [ ] **Compile it.** There is no LaTeX toolchain in the dev environment, so the draft has been
   structure-checked (braces, labels/refs, figure paths, cite keys) but **never rendered**. First
   build on Overleaf or a local TeX dist:
