@@ -159,6 +159,29 @@ Key takeaways for the paper:
 *Convention: add a detailed entry here after every feature — what was built, how, why, the
 result, threats to validity, and follow-ups.*
 
+### 2026-07-01 — Task 6: COMPAS MAR anomaly — flagged, not force-explained  (branch `analysis/compas-mar-anomaly`)
+
+**Question.** COMPAS regime: MCAR r=−0.52, MNAR r=−0.53 (strong) but **MAR r=−0.07** (flat). Is the
+weak MAR signal explained by COMPAS's zero-inflated MAR driver (`priors_count`, 32% zero)
+producing tied propensity ranks that flatten the pattern?
+
+**What was done.** `experiment/compas_mar_probe.py`: quantify the concentration/ties of each
+dataset's MAR driver (fraction zero, modal fraction, Herfindahl tie-probability, non-unique
+fraction) against the per-mechanism r.
+
+**Result — hypothesis REFUTED.** Adult's MAR driver `hours-per-week` is *more* concentrated
+(tie-prob **0.243**, modal **0.472**) than COMPAS's `priors_count` (tie-prob **0.160**, modal
+0.316, 32% zero), yet Adult's MAR signal is **strong (r=+0.44)** while COMPAS's is **flat
+(−0.07)**. If concentration/ties flattened MAR, Adult would be the *more* flattened, not less. So
+driver concentration does **not** explain the weak COMPAS MAR.
+
+**Verdict (honest).** Per the task's falsifiable design, we flag it: the weak COMPAS MAR is an
+**unexplained per-mechanism variation**, not attributable to the driver. Ready sentence for
+`main.tex` (Task 7 folds it in): *"On COMPAS the MAR signal is notably weaker than MCAR/MNAR; a
+probe rules out the obvious cause (its zero-inflated MAR driver), since Adult's MAR driver is in
+fact more concentrated yet yields a strong MAR signal—so we report this per-mechanism variation as
+unexplained rather than over-interpret it."* Repro: `python experiment/compas_mar_probe.py`.
+
 ### 2026-07-01 — Task 5: detectability axis, tested within Adult  (branch `analysis/detectability-subsample`)
 
 **Question.** Is "detectability ← sample size" real, or is German's null confounded with its other
