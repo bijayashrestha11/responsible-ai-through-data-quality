@@ -61,9 +61,9 @@ equalized odds}
 \section{Introduction}
 Fairness interventions in machine learning predominantly target the model: reweighing,
 constrained training, post-processing of scores. Yet many fairness harms originate in the
-data, and a recurring observation is that \emph{missing data} in particular has been
-neglected as a fairness concern~\cite{martinezplumed2021}. This paper takes a
-data-engineering stance: rather than measuring unfairness after a model exists, we ask what
+data, and while missing data is now an active fairness concern~\cite{martinezplumed2021}, it
+remains under-addressed from an \emph{upstream, pipeline-detection} standpoint. This paper takes
+that data-engineering stance: rather than measuring unfairness after a model exists, we ask what
 can be measured at ingestion or transformation time, and where such a check belongs in the
 pipeline.
 
@@ -83,9 +83,10 @@ honest characterization of where it fails (Sections~\ref{sec:method}--\ref{sec:r
 inside an existing data-quality framework, the leg that makes it a data-engineering artifact
 (Section~\ref{sec:gate}).
 \end{enumerate}
-We frame the work as the pipeline operationalization that recent audit-oriented
-work~\cite{mdla2026} calls for but does not build. Equally central is where the signal
-\emph{fails}: across three datasets we find it holds on Adult, reverses on COMPAS, and vanishes
+Our standing contribution is the predictive-validity evidence---a controlled, reproducible
+benchmark relating a pre-training statistic to downstream fairness, with a derived threshold---that
+audit-oriented work such as MDLA~\cite{mdla2026} identifies as needed but does not itself provide.
+Equally central is where the signal \emph{fails}: across three datasets we find it holds on Adult, reverses on COMPAS, and vanishes
 on German Credit, and we identify the two properties---group structure and sample size---that
 govern which regime obtains. The honesty of that boundary is a contribution, not a caveat.
 
@@ -131,13 +132,14 @@ composes~\cite{biswasrajan2021}. We add a single fairness-relevant, \emph{predic
 this class of gate.
 
 \textbf{Closest competitors.}
-The Missingness Demographic Leakage Audit~\cite{mdla2026} (preprint) is a manual, four-step
-retrospective \emph{audit} on ICU data testing whether missingness indicators leak demographics;
-its findings are associative, and its response is post-hoc recalibration. It shares our
-pre-deployment stance, so the distinction is not timing but \emph{operationalization}: MDLA does
-not automate the check into a pipeline validation gate, nor calibrate a threshold that
-\emph{forecasts} downstream fairness degradation---the prospective evaluation it lists as future
-work, and what we build.
+The Missingness Demographic Leakage Audit~\cite{mdla2026} (preprint; still v1 as of writing) is a
+manual, four-step retrospective \emph{audit} on ICU data testing whether missingness indicators
+leak demographics; its findings are associative, and its response is post-hoc recalibration. It
+shares our pre-deployment stance, so our differentiators are the two that do not turn on timing and
+would hold even if such an audit were later automated: an \emph{automated pipeline validation gate},
+and a \emph{calibrated predictive threshold} backed by benchmark evidence that a pre-training
+statistic forecasts downstream fairness degradation---the prospective evaluation MDLA lists as
+future work. We do not claim primacy of the idea; we claim the predictive-validity evidence.
 Su\'arez Ferreira et al.~\cite{suarezferreira2025} (preprint) propose a data-centric early
 indicator of fairness, but the signal is classification \emph{complexity}, not missingness,
 and they address neither pipeline placement nor automation.
@@ -315,8 +317,11 @@ F1-optimal cutoff for flagging a meaningful equalized-odds increase is $D_{\max}
 (recall $0.72$, precision $0.26$; a precision-$0.8$ operating point is unreachable). The gate is
 thus best read as a \emph{high-recall screen}---a sensitive early warning that flags data for
 review, not a precise oracle---which is the appropriate role for a validation gate and consistent
-with a moderate predictor. The threshold is Adult-calibrated and, by the boundary condition above,
-regime-dependent. On a batch with strong group-correlated missingness the gate fails
+with a moderate predictor. Practitioners should read the trade honestly: at this operating point a
+precision of $0.26$ means roughly three in four flagged batches would not have produced a
+meaningful equalized-odds increase, so the gate is a triage signal that routes data to human review
+or closer auditing, not an automated block. The threshold is Adult-calibrated and, by the boundary
+condition above, regime-dependent. On a batch with strong group-correlated missingness the gate fails
 ($D_{\max}=0.30 > \tau=0.10$, worst feature \texttt{age}); on a batch with the same overall
 missingness but \emph{no} group correlation it passes ($D_{\max}=0.00$), on both Adult and COMPAS.
 
@@ -339,11 +344,17 @@ three datasets the signal holds (Adult), reverses (COMPAS), and vanishes (German
 explain which regime obtains: its \emph{sign} is governed by group structure (the encoding-flip
 result) and its \emph{detectability} by sample size (the German null, reproduced by subsampling
 Adult with all else fixed). This is itself the
-adjudication of the conflicting prior results~\cite{bhatti2025,min2025}. The main open question is
-which of the three co-varying structural properties drives the sign; our two large-enough datasets
-confound them, and a dataset in which they diverge would isolate the cause. We deliberately hold
-imputation fixed---imputation choice is a known, separate fairness lever~\cite{feng2023}---and we
-leave mitigation to future work: the gate \emph{detects}, it does not repair. Finally, our
+adjudication of the conflicting prior results~\cite{bhatti2025,min2025}. We are careful not to
+over-read the sign: the encoding-flip experiment identifies that the sign tracks \emph{which group}
+carries the excess missingness, but the three structural properties that describe that group
+(minority status, the sign of the base-rate difference, and the group--target correlation) co-vary
+across our two datasets, so we do not claim any one of them as the identified cause. A concrete,
+falsifiable next step would isolate it: a large-sample dataset in which these properties
+\emph{dissociate}---for instance, one where the disadvantaged group is the \emph{majority} yet
+carries the \emph{lower} base rate, so minority status and base-rate direction point opposite
+ways---would break the confound and identify the causal property. We deliberately hold imputation
+fixed---imputation choice is a known, separate fairness lever~\cite{feng2023}---and we leave
+mitigation to future work: the gate \emph{detects}, it does not repair. Finally, our
 protected attributes are binary; extending $D_{\max}$ to multi-group settings is straightforward in
 principle but untested here.
 

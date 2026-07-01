@@ -103,6 +103,10 @@ medRxiv.
   "recommends integrating missingness-aware auditing into clinical AI validation pipelines"
   sub-claim is **consistent but not directly quoted** → treat as PARTIAL until the sentence is
   captured first-party.
+- **Re-verified 2026-07-01** (twice): still **v1 preprint**, no journal/peer-reviewed version, and
+  **no automated pipeline gate or calibrated predictive threshold** (Semantic Scholar
+  venue=medRxiv/journal=null; Europe PMC 0 hits; DOI resolves to medRxiv). Framing "MDLA audits but
+  does not build an automated predictive gate" remains accurate.
 
 **suarezferreira2025 — VERIFIED (preprint / not peer-reviewed).** Suárez Ferreira, J., Slavkovik,
 M., & Casillas, J. (2025). *Uncovering fairness through data complexity as an early indicator*
