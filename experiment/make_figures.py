@@ -181,6 +181,26 @@ def fig_gate_schematic():
     save(fig, "fig0_gate_schematic")
 
 
+def fig_subsample():
+    """Detectability vs sample size: pooled r on Adult subsamples (Task 5). Reads
+    results/tables/adult/subsample.csv (skips if absent)."""
+    path = os.path.join(_REPO, "results", "tables", "adult", "subsample.csv")
+    if not os.path.exists(path):
+        return
+    df = pd.read_csv(path)
+    fig, ax = plt.subplots(figsize=(3.6, 2.9))
+    ax.plot(df.n, df.pooled_r, "o-", color="#4C72B0", lw=1.7, label="Adult (subsampled)")
+    ax.axhline(0, color="0.6", lw=0.8, zorder=0)
+    ax.axhline(-0.02, color="#C44E52", ls=":", lw=1.3, label="German null ($n{=}1000$)")
+    ax.set_xscale("log")
+    ax.set_xlabel("training-set size $n$ (log scale)")
+    ax.set_ylabel(r"pooled $r$ ($D_{\max}$, $\Delta$EO)")
+    ax.set_title("Detectability grows with sample size")
+    ax.legend(fontsize=7, loc="upper left")
+    fig.tight_layout()
+    save(fig, "fig6_subsample")
+
+
 def main():
     da, dc, dg = load("adult"), load("compas"), load("german")
     fig_gate_schematic()
@@ -189,7 +209,8 @@ def main():
     fig_mechanism_r(da, dc)
     fig_aggregation(da)
     fig_boundary_flip()
-    print(f"Wrote 6 figures (PDF+PNG) to {os.path.relpath(OUT, _REPO)}/")
+    fig_subsample()
+    print(f"Wrote figures (PDF+PNG) to {os.path.relpath(OUT, _REPO)}/")
 
 
 if __name__ == "__main__":
